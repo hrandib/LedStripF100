@@ -5,7 +5,7 @@ Project {
 	minimumQbsVersion: "1.6.0"
 CppApplication
 {
-	property string ChibiOS: "ChibiOS"
+  property string ChibiOS: "ChibiOS/"
 
 	type: ["application", "printsize"]
 	consoleApplication: true
@@ -35,7 +35,7 @@ CppApplication
 	]
 	cpp.commonCompilerFlags:
 	[
-    "-O0",
+    "-O2",
 //	"-flto=4",
 //  "-fdata-sections",
 		"-ffunction-sections",
@@ -45,9 +45,9 @@ CppApplication
 		"-Wno-maybe-uninitialized"
 	]
 	Group {	name: "Linker files"
-		prefix: "SW4STM32/STM32746G_DISCOVERY/"
+    prefix: "c:/Projects/ChibiOS_based/PicoPS/ChibiOS/os/common/startup/ARMCMx/compilers/GCC/ld/"
 		fileTags: ["linkerscript"]
-		files: "STM32F746NGHx_FLASH_ETH.ld"
+    files: "STM32F103x8.ld"
 	}
 	cpp.linkerFlags:
 	[
@@ -61,8 +61,35 @@ CppApplication
 		]
 	cpp.includePaths:
 	[
+    "config",
+    //Startup
+    ChibiOS + "os/common/startup/ARMCMx/compilers/GCC/",
+    ChibiOS + "os/common/startup/ARMCMx/devices/STM32F1xx",
+    ChibiOS + "os/common/ext/CMSIS/include",
+    ChibiOS + "os/common/ext/CMSIS/ST/STM32F1xx",
+    //Port
+    ChibiOS + "os/common/ports/ARMCMx",
+    ChibiOS + "os/common/ports/ARMCMx/compilers/GCC",
+
+
 	]
-  Modbus { condition: true }
+  Group { name: "Startup"
+    prefix: ChibiOS + "os/common/startup/ARMCMx/compilers/GCC/"
+    files: [
+      "crt0_v7m.S",
+      "crt1.c",
+      "vectors.c"
+    ]
+ 	}
+  Group { name: "Port"
+    prefix: ChibiOS + "os/common/ports/ARMCMx/"
+    files: [
+      "compilers/GCC/chcoreasm_v6m.S",
+      "compilers/GCC/chtypes.h",
+      "chcore_v6m.c",
+      "chcore.c",
+    ]
+  }
   Group { name: "Test sources"
 		files: [
      ]
@@ -81,8 +108,8 @@ CppApplication
 	}
 	Group {	name: "Common"
 		files:
-			[
-         "main.cpp",
+    [
+         "main.c"
      ]
 		excludeFiles:
 		[
