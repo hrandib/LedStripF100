@@ -19,7 +19,7 @@
 
 #include "ch.h"
 #include "hal.h"
-#include "ch_test.h"
+//#include "ch_test.h"
 
 #include "shell.h"
 #include "chprintf.h"
@@ -96,9 +96,9 @@ static __attribute__((noreturn)) THD_FUNCTION(Thread1, arg) {
   chRegSetThreadName("blinker");
   while (true) {
     systime_t time = serusbcfg.usbp->state == USB_ACTIVE ? 250 : 500;
-    palClearPad(GPIOB, GPIOB_LED);
+    palClearPad(GPIOB, GPIOC_LED);
     chThdSleepMilliseconds(time);
-    palSetPad(GPIOB, GPIOB_LED);
+    palSetPad(GPIOB, GPIOC_LED);
     chThdSleepMilliseconds(time);
   }
 }

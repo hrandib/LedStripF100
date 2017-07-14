@@ -25,7 +25,7 @@ CppApplication
 	]
 	cpp.driverFlags:
 	[
-		"-mthumb",
+    "-mthumb",
 		"-mcpu=cortex-m3",
 		"-mtune=cortex-m3",
 		"-ggdb3",
@@ -35,8 +35,8 @@ CppApplication
 	]
 	cpp.commonCompilerFlags:
 	[
-    "-O2",
-//	"-flto=4",
+    "-Os",
+    "-flto=4",
 //  "-fdata-sections",
 		"-ffunction-sections",
 //	"-fshort-enums",
@@ -47,12 +47,14 @@ CppApplication
 	Group {	name: "Linker files"
     prefix: ChibiOS + "os/common/startup/ARMCMx/compilers/GCC/ld/"
 		fileTags: ["linkerscript"]
-    files: "STM32F103x8.ld"
+    files: [ "STM32F103x8.ld" ]
 	}
 	cpp.linkerFlags:
 	[
 		"--gc-sections",
-		"--Map=c:/Projects/output.map"
+    "--Map=c:/Projects/output.map",
+    "--defsym=__process_stack_size__=0x400",
+    "--defsym=__main_stack_size__=0x400"
 //	"-nostartfiles",
 //	"--specs=nosys.specs",
 //	"--specs=nano.specs",
@@ -62,6 +64,7 @@ CppApplication
 	cpp.includePaths:
 	[
     "config",
+    "board",
     //Startup
     ChibiOS + "os/common/startup/ARMCMx/compilers/GCC/",
     ChibiOS + "os/common/startup/ARMCMx/devices/STM32F1xx",
@@ -80,15 +83,26 @@ CppApplication
     //Platform
     ChibiOS + "os/hal/ports/common/ARMCMx",
     ChibiOS + "os/hal/ports/STM32/STM32F1xx",
+    //License
+    ChibiOS + "os/license",
     //Drivers
     ChibiOS + "os/hal/ports/STM32/LLD/CANv1",
     ChibiOS + "os/hal/ports/STM32/LLD/DACv1",
     ChibiOS + "os/hal/ports/STM32/LLD/DMAv1",
     ChibiOS + "os/hal/ports/STM32/LLD/EXTIv1",
     ChibiOS + "os/hal/ports/STM32/LLD/GPIOv1",
-
-
+    ChibiOS + "os/hal/ports/STM32/LLD/TIMv1",
+    ChibiOS + "os/hal/ports/STM32/LLD/USBv1",
+    //Various
+    ChibiOS + "os/various/shell",
+    ChibiOS + "test/lib",
+    ChibiOS + "test/rt/source/test",
+    //Streams
+    ChibiOS + "os/hal/lib/streams"
 	]
+  cpp.libraryPaths: [
+    ChibiOS + "os/common/startup/ARMCMx/compilers/GCC/ld"
+  ]
   Group { name: "Startup"
     prefix: ChibiOS + "os/common/startup/ARMCMx/compilers/GCC/"
     files: [
@@ -97,13 +111,27 @@ CppApplication
       "vectors.c"
     ]
  	}
+  Group { name: "Board"
+    prefix: "board/"
+    files: [
+      "*.h",
+      "*.c"
+    ]
+  }
+  Group { name: "Config"
+    prefix: "config/"
+    files: [
+      "usbcfg.h",
+      "usbcfg.c",
+    ]
+  }
   Group { name: "Port"
     prefix: ChibiOS + "os/common/ports/ARMCMx/"
     files: [
       "compilers/GCC/chcoreasm_v7m.S",
       "compilers/GCC/chtypes.h",
       "chcore_v7m.c",
-      "chcore.c",
+      "chcore.c"
     ]
   }
   Group { name: "Platform"
@@ -114,22 +142,26 @@ CppApplication
     ]
   }
   Group { name: "Drivers"
-    prefix: ChibiOS + "os/hal/ports/STM32/LLD/"
+    prefix: ChibiOS + "os/hal/ports/STM32/"
     files: [
-      "CANv1/hal_can_lld.h",
-      "CANv1/hal_can_lld.c",
-      "DACv1/hal_dac_lld.h",
-      "DACv1/hal_dac_lld.c",
-      "DMAv1/stm32_dma.h",
-      "DMAv1/stm32_dma.c",
-      "EXTIv1/hal_ext_lld.h",
-      "EXTIv1/hal_ext_lld.c",
-      "GPIOv1/hal_pal_lld.h",
-      "GPIOv1/hal_pal_lld.c"
+      "STM32F1xx/hal_lld.h",
+      "STM32F1xx/hal_lld.c",
+      "LLD/CANv1/hal_can_lld.h",
+      "LLD/CANv1/hal_can_lld.c",
+      "LLD/DACv1/hal_dac_lld.h",
+      "LLD/DACv1/hal_dac_lld.c",
+      "LLD/DMAv1/stm32_dma.h",
+      "LLD/DMAv1/stm32_dma.c",
+      "LLD/EXTIv1/hal_ext_lld.h",
+      "LLD/EXTIv1/hal_ext_lld.c",
+      "LLD/GPIOv1/hal_pal_lld.h",
+      "LLD/GPIOv1/hal_pal_lld.c",
+      "LLD/TIMv1/hal_st_lld.h",
+      "LLD/TIMv1/hal_st_lld.c",
+      "LLD/USBv1/hal_usb_lld.h",
+      "LLD/USBv1/hal_usb_lld.c"
     ]
   }
-
-
   Group { name: "RT"
     prefix: ChibiOS + "os/"
     files: [
@@ -160,6 +192,13 @@ CppApplication
       ChibiOS + "os/hal/osal/rt/osal.c"
     ]
 	}
+  Group { name: "HAL_PORT"
+    prefix: ChibiOS + "/os/hal/ports/common/ARMCMx/"
+    files: [
+      "nvic.h",
+      "nvic.c"
+    ]
+  }
   Group { name: "HAL"
     prefix: ChibiOS + "os/hal/src/"
     files: [
@@ -198,20 +237,70 @@ CppApplication
 		files: [
 		]
 	}
-
-	Group {	name: "Common"
-		files:
-    [
-         "main.c"
-     ]
-		excludeFiles:
-		[
+  Group {	name: "Main"
+    files: [
+      "main.c"
+    ]
+    excludeFiles: [
 			"**/*_res.c",
 			"**/*_conf_template.c",
 			"**/*_conf_template.h",
 			"**/*.html",
 		]
 	}
+  Group {	name: "Various"
+    prefix: ChibiOS + "os/various/"
+    files: [
+      "shell/shell.h",
+      "shell/shell.c",
+      "shell/shell_cmd.h",
+      "shell/shell_cmd.c",
+    ]
+  }
+  Group {	name: "Lib"
+    prefix: ChibiOS + "os/hal/lib/"
+    files: [
+      "streams/chprintf.h",
+      "streams/chprintf.c",
+      "streams/memstreams.h",
+      "streams/memstreams.c",
+      "streams/nullstreams.h",
+      "streams/nullstreams.c"
+    ]
+  }
+  Group { name: "Test"
+    prefix: ChibiOS + "test/"
+    files: [
+      "lib/ch_test.h",
+      "lib/ch_test.c",
+      "rt/source/test/test_root.h",
+      "rt/source/test/test_root.c",
+      "rt/source/test/test_sequence_001.h",
+      "rt/source/test/test_sequence_002.h",
+      "rt/source/test/test_sequence_003.h",
+      "rt/source/test/test_sequence_004.h",
+      "rt/source/test/test_sequence_005.h",
+      "rt/source/test/test_sequence_006.h",
+      "rt/source/test/test_sequence_007.h",
+      "rt/source/test/test_sequence_008.h",
+      "rt/source/test/test_sequence_009.h",
+      "rt/source/test/test_sequence_010.h",
+      "rt/source/test/test_sequence_011.h",
+      "rt/source/test/test_sequence_012.h",
+      "rt/source/test/test_sequence_001.c",
+      "rt/source/test/test_sequence_002.c",
+      "rt/source/test/test_sequence_003.c",
+      "rt/source/test/test_sequence_004.c",
+      "rt/source/test/test_sequence_005.c",
+      "rt/source/test/test_sequence_006.c",
+      "rt/source/test/test_sequence_007.c",
+      "rt/source/test/test_sequence_008.c",
+      "rt/source/test/test_sequence_009.c",
+      "rt/source/test/test_sequence_010.c",
+      "rt/source/test/test_sequence_011.c",
+      "rt/source/test/test_sequence_012.c",
+    ]
+  }
 	Rule
 	{
 		id: size
