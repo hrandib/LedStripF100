@@ -22,7 +22,8 @@ CppApplication
 	[
 		"_GLIBCXX_USE_C99",
     "_GLIBCXX_HAVE_BROKEN_VSWPRINTF",
-    "STM32F100xB"
+    "SHELL_CONFIG_FILE",
+    "STM32F100xB",
 	]
 	cpp.driverFlags:
 	[
@@ -124,6 +125,7 @@ CppApplication
       "chconf.h",
       "halconf.h",
       "mcuconf.h",
+      "shellconf.h",
     ]
   }
   Group { name: "Port"

@@ -1,0 +1,6 @@
+#ifndef SHELLCONF_H
+#define SHELLCONF_H
+
+#define SHELL_CMD_THREADS_ENABLED FALSE
+
+#endif //SHELLCONF_H

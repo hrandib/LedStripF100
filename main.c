@@ -24,13 +24,11 @@
 #include "shell.h"
 #include "chprintf.h"
 
-//#include "usbcfg.h"
-
 /*===========================================================================*/
 /* Command line related.                                                     */
 /*===========================================================================*/
 
-#define SHELL_WA_SIZE   THD_WORKING_AREA_SIZE(2048)
+static THD_WORKING_AREA(SHELL_WA_SIZE, 1024);
 
 /* Can be measured using dd if=/dev/xxxx of=/dev/null bs=512 count=10000.*/
 static void cmd_write(BaseSequentialStream *chp, int argc, char *argv[]) {
@@ -133,16 +131,17 @@ int main(void) {
    * Creates the blinker thread.
    */
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
+  chThdCreateStatic(SHELL_WA_SIZE, sizeof(SHELL_WA_SIZE), NORMALPRIO, shellThread, (void*)&shell_cfg1);
 
   /*
    * Normal main() thread activity, spawning shells.
    */
   while (true) {
     if (true) {
-      thread_t *shelltp = chThdCreateFromHeap(NULL, SHELL_WA_SIZE,
-                                              "shell", NORMALPRIO + 1,
-                                              shellThread, (void *)&shell_cfg1);
-      chThdWait(shelltp);               /* Waiting termination.             */
+//      thread_t *shelltp = chThdCreateFromHeap(NULL, SHELL_WA_SIZE,
+//                                              "shell", NORMALPRIO + 1,
+//                                              shellThread, (void *)&shell_cfg1);
+//      chThdWait(shelltp);               /* Waiting termination.             */
     }
     chThdSleepMilliseconds(1000);
   }
