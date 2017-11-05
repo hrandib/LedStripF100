@@ -92,7 +92,7 @@ CppApplication
     ChibiOS + "os/hal/ports/STM32/LLD/EXTIv1",
     ChibiOS + "os/hal/ports/STM32/LLD/GPIOv1",
     ChibiOS + "os/hal/ports/STM32/LLD/TIMv1",
-    ChibiOS + "os/hal/ports/STM32/LLD/USBv1",
+    ChibiOS + "os/hal/ports/STM32/LLD/USARTv1",
     //Various
     ChibiOS + "os/various/shell",
     ChibiOS + "test/lib",
@@ -121,8 +121,9 @@ CppApplication
   Group { name: "Config"
     prefix: "config/"
     files: [
-      "usbcfg.h",
-      "usbcfg.c",
+      "chconf.h",
+      "halconf.h",
+      "mcuconf.h",
     ]
   }
   Group { name: "Port"
@@ -158,8 +159,8 @@ CppApplication
       "LLD/GPIOv1/hal_pal_lld.c",
       "LLD/TIMv1/hal_st_lld.h",
       "LLD/TIMv1/hal_st_lld.c",
-      "LLD/USBv1/hal_usb_lld.h",
-      "LLD/USBv1/hal_usb_lld.c"
+      "LLD/USARTv1/hal_serial_lld.h",
+      "LLD/USARTv1/hal_serial_lld.c"
     ]
   }
   Group { name: "RT"
@@ -222,11 +223,9 @@ CppApplication
       "hal_rtc.c",
       "hal_sdc.c",
       "hal_serial.c",
-      "hal_serial_usb.c",
       "hal_spi.c",
       "hal_st.c",
       "hal_uart.c",
-      "hal_usb.c",
       "hal_wdg.c"
     ]
   }
