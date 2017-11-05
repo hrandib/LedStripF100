@@ -299,6 +299,7 @@ CppApplication
       "rt/source/test/test_sequence_010.c",
       "rt/source/test/test_sequence_011.c",
       "rt/source/test/test_sequence_012.c",
+      "rt/source/test/test_sequence_013.c",
     ]
   }
 	Rule
@@ -310,7 +311,7 @@ CppApplication
 			filePath: "-"
 		}
 		prepare: {
-			var sizePath = "c:/Tools/gccarm_5.3/bin/arm-none-eabi-size.exe";
+      var sizePath = "c:/Tools/gccarm_6.3.1/bin/arm-none-eabi-size.exe";
 			var args = [input.filePath];
 			var cmd = new Command(sizePath, args);
 			cmd.description = "File size: " + FileInfo.fileName(input.filePath);
