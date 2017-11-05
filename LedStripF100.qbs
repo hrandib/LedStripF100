@@ -21,7 +21,8 @@ CppApplication
 	cpp.defines:
 	[
 		"_GLIBCXX_USE_C99",
-		"_GLIBCXX_HAVE_BROKEN_VSWPRINTF"
+    "_GLIBCXX_HAVE_BROKEN_VSWPRINTF",
+    "STM32F100xB"
 	]
 	cpp.driverFlags:
 	[
@@ -47,7 +48,7 @@ CppApplication
 	Group {	name: "Linker files"
     prefix: ChibiOS + "os/common/startup/ARMCMx/compilers/GCC/ld/"
 		fileTags: ["linkerscript"]
-    files: [ "STM32F103x8.ld" ]
+    files: [ "STM32F100xB.ld" ]
 	}
 	cpp.linkerFlags:
 	[
@@ -86,7 +87,6 @@ CppApplication
     //License
     ChibiOS + "os/license",
     //Drivers
-    ChibiOS + "os/hal/ports/STM32/LLD/CANv1",
     ChibiOS + "os/hal/ports/STM32/LLD/DACv1",
     ChibiOS + "os/hal/ports/STM32/LLD/DMAv1",
     ChibiOS + "os/hal/ports/STM32/LLD/EXTIv1",
@@ -114,8 +114,8 @@ CppApplication
   Group { name: "Board"
     prefix: "board/"
     files: [
-      "*.h",
-      "*.c"
+      "board.h",
+      "board.c"
     ]
   }
   Group { name: "Config"
@@ -138,6 +138,12 @@ CppApplication
   Group { name: "Platform"
     prefix: ChibiOS + "os/hal/ports/STM32/STM32F1xx/"
     files: [
+      "stm32_isr.h",
+      "stm32_rcc.h",
+      "stm32_registry.h",
+      "hal_lld.h",
+      "hal_lld.c",
+      "hal_lld_f100.h",
       "hal_ext_lld_isr.c",
       "hal_adc_lld.c"
     ]
@@ -145,10 +151,6 @@ CppApplication
   Group { name: "Drivers"
     prefix: ChibiOS + "os/hal/ports/STM32/"
     files: [
-      "STM32F1xx/hal_lld.h",
-      "STM32F1xx/hal_lld.c",
-      "LLD/CANv1/hal_can_lld.h",
-      "LLD/CANv1/hal_can_lld.c",
       "LLD/DACv1/hal_dac_lld.h",
       "LLD/DACv1/hal_dac_lld.c",
       "LLD/DMAv1/stm32_dma.h",
@@ -208,7 +210,6 @@ CppApplication
       "hal_queues.c",
       "hal_mmcsd.c",
       "hal_adc.c",
-      "hal_can.c",
       "hal_dac.c",
       "hal_ext.c",
       "hal_gpt.c",

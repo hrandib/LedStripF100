@@ -24,7 +24,7 @@
 #include "shell.h"
 #include "chprintf.h"
 
-#include "usbcfg.h"
+//#include "usbcfg.h"
 
 /*===========================================================================*/
 /* Command line related.                                                     */
@@ -61,7 +61,7 @@ static void cmd_write(BaseSequentialStream *chp, int argc, char *argv[]) {
   while (chnGetTimeout((BaseChannel *)chp, TIME_IMMEDIATE) == Q_TIMEOUT) {
 #if 1
     /* Writing in channel mode.*/
-    chnWrite(&SDU1, buf, sizeof buf - 1);
+    chnWrite(&SD1, buf, sizeof buf - 1);
 #else
     /* Writing in buffer mode.*/
     (void) obqGetEmptyBufferTimeout(&SDU1.obqueue, TIME_INFINITE);
@@ -78,7 +78,7 @@ static const ShellCommand commands[] = {
 };
 
 static const ShellConfig shell_cfg1 = {
-  (BaseSequentialStream *)&SDU1,
+  (BaseSequentialStream *)&SD1,
   commands
 };
 
@@ -95,10 +95,10 @@ static __attribute__((noreturn)) THD_FUNCTION(Thread1, arg) {
   (void)arg;
   chRegSetThreadName("blinker");
   while (true) {
-    systime_t time = serusbcfg.usbp->state == USB_ACTIVE ? 250 : 500;
-    palClearPad(GPIOB, GPIOC_LED);
+    systime_t time = 250;//serusbcfg.usbp->state == USB_ACTIVE ? 250 : 500;
+    palClearPad(GPIOB, GPIOC_LED3);
     chThdSleepMilliseconds(time);
-    palSetPad(GPIOB, GPIOC_LED);
+    palSetPad(GPIOB, GPIOC_LED4);
     chThdSleepMilliseconds(time);
   }
 }
@@ -121,18 +121,8 @@ int main(void) {
   /*
    * Initializes a serial-over-USB CDC driver.
    */
-  sduObjectInit(&SDU1);
-  sduStart(&SDU1, &serusbcfg);
-
-  /*
-   * Activates the USB driver and then the USB bus pull-up on D+.
-   * Note, a delay is inserted in order to not have to disconnect the cable
-   * after a reset.
-   */
-  usbDisconnectBus(serusbcfg.usbp);
-  chThdSleepMilliseconds(1500);
-  usbStart(serusbcfg.usbp, &usbcfg);
-  usbConnectBus(serusbcfg.usbp);
+//  sdObjectInit(&SD1);
+//  sdStart(&SD1, &sercfg);
 
   /*
    * Shell manager initialization.
@@ -148,7 +138,7 @@ int main(void) {
    * Normal main() thread activity, spawning shells.
    */
   while (true) {
-    if (SDU1.config->usbp->state == USB_ACTIVE) {
+    if (true) {
       thread_t *shelltp = chThdCreateFromHeap(NULL, SHELL_WA_SIZE,
                                               "shell", NORMALPRIO + 1,
                                               shellThread, (void *)&shell_cfg1);

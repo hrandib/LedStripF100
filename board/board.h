@@ -18,15 +18,14 @@
 #define _BOARD_H_
 
 /*
- * Setup for the STM32F103C8T6 Module often described as "Arduino"-like
- * on eBay, typically marked "www.vcc-gnd.com".
+ * Setup for STMicroelectronics STM32VL-Discovery board.
  */
 
 /*
  * Board identifier.
  */
-#define BOARD_MINIMAL_STM32_F103
-#define BOARD_NAME              "STM32F103 Minimal Module"
+#define BOARD_ST_STM32VL_DISCOVERY
+#define BOARD_NAME              "ST STM32VL-Discovery"
 
 /*
  * Board frequencies.
@@ -36,30 +35,21 @@
 
 /*
  * MCU type, supported types are defined in ./os/hal/platforms/hal_lld.h.
- *
- * Only xB (128KB Flash) is defined, but it's identical to the
- * x8 version (64KB Flash) except for the Flash region size in the
- * linker script. For x8 parts use xB here and change to the x8 linker
- * script in the project Makefile.
  */
-#define STM32F103xB
+#ifndef STM32F100xB
+#define STM32F100xB
+#endif
 
 /*
- * IO pins assignments
- *
- * numbering is sorted by onboard/connectors, as from the schematics in
- * http://www.vcc-gnd.com/read.php?tid=369
+ * IO pins assignments.
  */
+#define GPIOA_BUTTON            0
+#define GPIOA_SPI1NSS           4
 
-/* on-board */
+#define GPIOB_SPI2NSS           12
 
-#define GPIOC_LED               13
-
-#define GPIOA_USBDM             11      // pin 8
-#define GPIOA_USBDP             12      // pin 9
-
-#define GPIOC_OSC32_IN          14
-#define GPIOC_OSC32_OUT         15
+#define GPIOC_LED4              8
+#define GPIOC_LED3              9
 
 /*
  * I/O ports initial setup, this configuration is established soon after reset
@@ -88,27 +78,41 @@
 /*
  * Port A setup.
  * Everything input with pull-up except:
+ * PA0  - Normal input      (BUTTON).
+ * PA2  - Alternate output  (USART2 TX).
+ * PA3  - Normal input      (USART2 RX).
+ * PA4  - Push pull output  (SPI1 NSS), initially high state.
+ * PA5  - Alternate output  (SPI1 SCK).
+ * PA6  - Normal input      (SPI1 MISO).
+ * PA7  - Alternate output  (SPI1 MOSI).
+ * PA9  - Alternate output  (USART1 TX).
+ * PA10 - Normal input      (USART1 RX).
  */
-#define VAL_GPIOACRL            0x88888888      /*  PA7...PA0 */
-#define VAL_GPIOACRH            0x88888888      /* PA15...PA8 */
+#define VAL_GPIOACRL            0xB4B34B84      /*  PA7...PA0 */
+#define VAL_GPIOACRH            0x888884B8      /* PA15...PA8 */
 #define VAL_GPIOAODR            0xFFFFFFFF
 
 /*
  * Port B setup.
  * Everything input with pull-up except:
+ * PB12 - Push pull output  (SPI2 NSS), initially high state.
+ * PB13 - Alternate output  (SPI2 SCK).
+ * PB14 - Normal input      (SPI2 MISO).
+ * PB15 - Alternate output  (SPI2 MOSI).
  */
 #define VAL_GPIOBCRL            0x88888888      /*  PB7...PB0 */
-#define VAL_GPIOBCRH            0x88888888      /* PB15...PB8 */
+#define VAL_GPIOBCRH            0xB4B38888      /* PB15...PB8 */
 #define VAL_GPIOBODR            0xFFFFFFFF
 
 /*
  * Port C setup.
  * Everything input with pull-up except:
- * PC13 - Digital output (LED).
+ * PC8  - Push-pull output (LED4), initially low state.
+ * PC9  - Push-pull output (LED3), initially low state.
  */
 #define VAL_GPIOCCRL            0x88888888      /*  PC7...PC0 */
-#define VAL_GPIOCCRH            0x88388888      /* PC15...PC8 */
-#define VAL_GPIOCODR            0xFFFFFFFF
+#define VAL_GPIOCCRH            0x88888833      /* PC15...PC8 */
+#define VAL_GPIOCODR            0xFFFFFCFF
 
 /*
  * Port D setup.

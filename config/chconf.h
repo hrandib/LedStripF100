@@ -48,7 +48,7 @@
  * @details Frequency of the system timer that drives the system ticks. This
  *          setting also defines the system tick time unit.
  */
-#define CH_CFG_ST_FREQUENCY                 2000
+#define CH_CFG_ST_FREQUENCY                 1000
 
 /**
  * @brief   Time delta constant for the tick-less mode.
@@ -514,8 +514,6 @@
 /*===========================================================================*/
 /* Port-specific settings (override port settings defaulted in chcore.h).    */
 /*===========================================================================*/
-
-#define CORTEX_VTOR_INIT 0x5000
 
 #endif  /* CHCONF_H */
 
