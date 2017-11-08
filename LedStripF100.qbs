@@ -9,62 +9,47 @@ CppApplication
 
 	type: ["application", "printsize"]
 	consoleApplication: true
-//	cpp.optimization: "small"
+  cpp.optimization: "small"
 	cpp.debugInformation: false
-//	cpp.enableExceptions: true
-	cpp.positionIndependentCode: false
-//	cpp.enableRtti: true
+  cpp.enableExceptions: false
+  cpp.enableRtti: false
+  cpp.positionIndependentCode: false
 	cpp.cLanguageVersion: "c11"
-//cpp.cxxLanguageVersion: "gnu++14"
-	cpp.cxxFlags: ["-std=gnu++14"]
+  cpp.cxxLanguageVersion: "gnu++14"
+//  cpp.cxxFlags: ["-std=gnu++14"]
 	cpp.executableSuffix: ".elf"
-	cpp.defines:
-	[
+  cpp.defines: [
 		"_GLIBCXX_USE_C99",
     "_GLIBCXX_HAVE_BROKEN_VSWPRINTF",
     "SHELL_CONFIG_FILE",
     "STM32F100xB",
 	]
-	cpp.driverFlags:
-	[
-    "-mthumb",
+  cpp.driverFlags: [
 		"-mcpu=cortex-m3",
-		"-mtune=cortex-m3",
 		"-ggdb3",
-		"-fmessage-length=0",
+    "--specs=nano.specs"
 		/*"-Wa,--defsym,THUMB2=1"*/
-		//"-nostdlib", "-nodefaultlibs"
+    //"-nostdlib", "-nodefaultlibs"
 	]
-	cpp.commonCompilerFlags:
-	[
-    "-Os",
-    "-flto=4",
-//  "-fdata-sections",
-		"-ffunction-sections",
-//	"-fshort-enums",
-//	"-ffreestanding",
-		"-Wno-unused-function",
-		"-Wno-maybe-uninitialized"
+  cpp.commonCompilerFlags: [
+    "-flto=8",
+    "-fdata-sections",
+    "-ffunction-sections",
+//		"-Wno-unused-function",
+//		"-Wno-maybe-uninitialized"
 	]
 	Group {	name: "Linker files"
     prefix: ChibiOS + "os/common/startup/ARMCMx/compilers/GCC/ld/"
 		fileTags: ["linkerscript"]
     files: [ "STM32F100xB.ld" ]
 	}
-	cpp.linkerFlags:
-	[
+  cpp.linkerFlags: [
 		"--gc-sections",
     "--Map=c:/Projects/output.map",
-    "--defsym=__process_stack_size__=0x400",
-    "--defsym=__main_stack_size__=0x400"
-//	"-nostartfiles",
-//	"--specs=nosys.specs",
-//	"--specs=nano.specs",
-//	"-lm",
-//	"-lnosys","-lgcc","-lc", "-lstdc++",
-		]
-	cpp.includePaths:
-	[
+    "--defsym=__process_stack_size__=0x100",
+    "--defsym=__main_stack_size__=0x100",
+  ]
+  cpp.includePaths: [
     "config",
     "board",
     //Startup
@@ -94,7 +79,10 @@ CppApplication
     ChibiOS + "os/hal/ports/STM32/LLD/GPIOv1",
     ChibiOS + "os/hal/ports/STM32/LLD/TIMv1",
     ChibiOS + "os/hal/ports/STM32/LLD/USARTv1",
+    //cpp support
+    ChibiOS + "os/various/cpp_wrappers",
     //Various
+    ChibiOS + "os/various",
     ChibiOS + "os/various/shell",
     ChibiOS + "test/lib",
     ChibiOS + "test/rt/source/test",
@@ -112,6 +100,15 @@ CppApplication
       "vectors.c"
     ]
  	}
+  Group { name: "cpp"
+    prefix: ChibiOS + "os/various/cpp_wrappers/"
+    files: [
+      "ch.hpp",
+      "ch.cpp",
+      "syscalls_cpp.hpp",
+      "syscalls_cpp.cpp",
+    ]
+  }
   Group { name: "Board"
     prefix: "board/"
     files: [
@@ -170,6 +167,7 @@ CppApplication
   Group { name: "RT"
     prefix: ChibiOS + "os/"
     files: [
+      "various/syscalls.c",
       "rt/src/chsys.c",
       "rt/src/chdebug.c",
       "rt/src/chtrace.c",
@@ -241,7 +239,7 @@ CppApplication
 	}
   Group {	name: "Main"
     files: [
-      "main.c"
+      "main.cpp"
     ]
     excludeFiles: [
 			"**/*_res.c",
@@ -271,6 +269,7 @@ CppApplication
     ]
   }
   Group { name: "Test"
+    condition: true
     prefix: ChibiOS + "test/"
     files: [
       "lib/ch_test.h",
