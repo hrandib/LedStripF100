@@ -180,6 +180,8 @@ CppApplication
       "LLD/TIMv1/hal_pwm_lld.c",
       "LLD/TIMv1/hal_st_lld.h",
       "LLD/TIMv1/hal_st_lld.c",
+      "LLD/USARTv1/hal_uart_lld.h",
+      "LLD/USARTv1/hal_uart_lld.c",
       "LLD/USARTv1/hal_serial_lld.h",
       "LLD/USARTv1/hal_serial_lld.c"
     ]
