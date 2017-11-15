@@ -41,9 +41,9 @@ CppApplication
 //		"-Wno-maybe-uninitialized"
 	]
 	Group {	name: "Linker files"
-    prefix: ChibiOS + "os/common/startup/ARMCMx/compilers/GCC/ld/"
+    prefix: "ld/"
 		fileTags: ["linkerscript"]
-    files: [ "STM32F100xB.ld" ]
+    files: ["STM32F100x6.ld"]
 	}
   cpp.linkerFlags: [
 		"--gc-sections",
