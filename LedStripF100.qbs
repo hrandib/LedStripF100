@@ -269,7 +269,7 @@ CppApplication
     ]
   }
   Group { name: "Test"
-    condition: true
+    condition: false
     prefix: ChibiOS + "test/"
     files: [
       "lib/ch_test.h",
