@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <cstdlib>
 
 #include "ch.h"
 #include "hal.h"
@@ -30,38 +31,46 @@
 
 static THD_WORKING_AREA(SHELL_WA_SIZE, 512);
 
-/* Can be measured using dd if=/dev/xxxx of=/dev/null bs=512 count=10000.*/
-static void cmd_write(BaseSequentialStream *chp, int argc, char *argv[]) {
-  static const uint8_t buf[] =
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-  (void)argv;
-  if (argc > 0) {
-    chprintf(chp, "Usage: write\r\n");
+static void cmd_pwm(BaseSequentialStream *chp, int argc, char *argv[]) {
+  auto SetPWM = [](pwmcnt_t cnt) {
+    pwmEnableChannel(&PWMD3, 2, cnt);
+  };
+  if(!argc) {
+    chprintf(chp, "Usage: pwm\r\n");
     return;
   }
-
-  while (chnGetTimeout((BaseChannel *)chp, TIME_IMMEDIATE) == Q_TIMEOUT) {
-#if 1
-    /* Writing in channel mode.*/
-    chnWrite(&SD1, buf, sizeof buf - 1);
-#else
-    /* Writing in buffer mode.*/
-    (void) obqGetEmptyBufferTimeout(&SDU1.obqueue, TIME_INFINITE);
-    memcpy(SDU1.obqueue.ptr, buf, SERIAL_USB_BUFFERS_SIZE);
-    obqPostFullBuffer(&SDU1.obqueue, SERIAL_USB_BUFFERS_SIZE);
-#endif
-  }
-  chprintf(chp, "\r\n\nstopped\r\n");
+  SetPWM((uint32_t)std::atoi(argv[0]));
 }
 
 static const ShellCommand commands[] = {
-  {"write", cmd_write},
+  {"pwm", cmd_pwm},
   {NULL, NULL}
 };
 
+static char histbuf[128];
+
 static const ShellConfig shell_cfg1 = {
   (BaseSequentialStream *)&SD1,
-  commands
+  commands,
+  histbuf,
+  128
+};
+
+static PWMConfig pwmcfg = {
+  4000000UL,                                    /* 10kHz PWM clock frequency.   */
+  4096,                                         /* Initial PWM period 1ms.      */
+  nullptr,
+  {
+    {PWM_OUTPUT_DISABLED, nullptr},
+    {PWM_OUTPUT_DISABLED, nullptr},
+    {PWM_OUTPUT_ACTIVE_HIGH, nullptr},
+    {PWM_OUTPUT_DISABLED, nullptr}
+  },
+  0,
+  0,
+  #if STM32_PWM_USE_ADVANCED
+  0
+  #endif
 };
 
 /*===========================================================================*/
@@ -71,19 +80,19 @@ static const ShellConfig shell_cfg1 = {
 /*
  * Blinker thread, times are in milliseconds.
  */
-static THD_WORKING_AREA(waThread1, 128);
-static __attribute__((noreturn)) THD_FUNCTION(Thread1, arg) {
+//static THD_WORKING_AREA(waThread1, 128);
+//static __attribute__((noreturn)) THD_FUNCTION(Thread1, arg) {
 
-  (void)arg;
-  chRegSetThreadName("blinker");
-  while (true) {
-    systime_t time = 250;//serusbcfg.usbp->state == USB_ACTIVE ? 250 : 500;
-    palClearPad(GPIOB, GPIOC_LED3);
-    chThdSleepMilliseconds(time);
-    palSetPad(GPIOB, GPIOC_LED4);
-    chThdSleepMilliseconds(time);
-  }
-}
+//  (void)arg;
+//  chRegSetThreadName("blinker");
+//  while (true) {
+//    systime_t time = 500;
+//    palClearPad(GPIOB, GPIOB_LED1);
+//    chThdSleepMilliseconds(time);
+//    palSetPad(GPIOB, GPIOB_LED1);
+//    chThdSleepMilliseconds(time);
+//  }
+//}
 
 /*
  * Application entry point.
@@ -100,11 +109,16 @@ int main(void) {
   halInit();
   chSysInit();
 
-  /*
-   * Initializes a serial-over-USB CDC driver.
-   */
-//  sdObjectInit(&SD1);
-//  sdStart(&SD1, &sercfg);
+  palSetPadMode(GPIOB, 0, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
+  pwmStart(&PWMD3, &pwmcfg);
+
+  RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
+  AFIO->MAPR |= AFIO_MAPR_USART1_REMAP;
+  SerialConfig sercfg{115200,
+                      USART_CR1_TE | USART_CR1_RE | USART_CR1_UE,
+                          0,
+                          0};
+  sdStart(&SD1, &sercfg);
 
   /*
    * Shell manager initialization.
@@ -114,19 +128,18 @@ int main(void) {
   /*
    * Creates the blinker thread.
    */
-  chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
+//  chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
   chThdCreateStatic(SHELL_WA_SIZE, sizeof(SHELL_WA_SIZE), NORMALPRIO, shellThread, (void*)&shell_cfg1);
 
+//  auto SetPWM = [](pwmcnt_t cnt) {
+//    pwmEnableChannel(&PWMD3, 2, cnt);
+//  };
   /*
    * Normal main() thread activity, spawning shells.
    */
+//  uint8_t cnt{};
   while (true) {
-    if (true) {
-//      thread_t *shelltp = chThdCreateFromHeap(NULL, SHELL_WA_SIZE,
-//                                              "shell", NORMALPRIO + 1,
-//                                              shellThread, (void *)&shell_cfg1);
-//      chThdWait(shelltp);               /* Waiting termination.             */
-    }
+//    SetPWM(cnt++);
     chThdSleepMilliseconds(1000);
   }
 }

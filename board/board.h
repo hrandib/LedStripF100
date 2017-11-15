@@ -25,7 +25,7 @@
  * Board identifier.
  */
 #define BOARD_ST_STM32VL_DISCOVERY
-#define BOARD_NAME              "ST STM32VL-Discovery"
+#define BOARD_NAME              "Custom"
 
 /*
  * Board frequencies.
@@ -48,8 +48,7 @@
 
 #define GPIOB_SPI2NSS           12
 
-#define GPIOC_LED4              8
-#define GPIOC_LED3              9
+#define GPIOB_LED1              0
 
 /*
  * I/O ports initial setup, this configuration is established soon after reset
@@ -88,8 +87,8 @@
  * PA9  - Alternate output  (USART1 TX).
  * PA10 - Normal input      (USART1 RX).
  */
-#define VAL_GPIOACRL            0xB4B34B84      /*  PA7...PA0 */
-#define VAL_GPIOACRH            0x888884B8      /* PA15...PA8 */
+#define VAL_GPIOACRL            0x88888888      /*  PA7...PA0 */
+#define VAL_GPIOACRH            0x888888B8      /* PA15...PA8 */
 #define VAL_GPIOAODR            0xFFFFFFFF
 
 /*
@@ -100,8 +99,8 @@
  * PB14 - Normal input      (SPI2 MISO).
  * PB15 - Alternate output  (SPI2 MOSI).
  */
-#define VAL_GPIOBCRL            0x88888888      /*  PB7...PB0 */
-#define VAL_GPIOBCRH            0xB4B38888      /* PB15...PB8 */
+#define VAL_GPIOBCRL            0x8B888881      /*  PB7...PB0 */
+#define VAL_GPIOBCRH            0x88888888      /* PB15...PB8 */
 #define VAL_GPIOBODR            0xFFFFFFFF
 
 /*
@@ -111,8 +110,8 @@
  * PC9  - Push-pull output (LED3), initially low state.
  */
 #define VAL_GPIOCCRL            0x88888888      /*  PC7...PC0 */
-#define VAL_GPIOCCRH            0x88888833      /* PC15...PC8 */
-#define VAL_GPIOCODR            0xFFFFFCFF
+#define VAL_GPIOCCRH            0x88888888      /* PC15...PC8 */
+#define VAL_GPIOCODR            0xFFFFFFFF
 
 /*
  * Port D setup.
