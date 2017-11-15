@@ -131,6 +131,7 @@ CppApplication
   Group { name: "Wake"
     prefix: "wake/"
     files: [
+      "wake_base.h",
     ]
   }
   Group { name: "Utils"
@@ -164,6 +165,7 @@ CppApplication
   }
   Group { name: "Drivers"
     prefix: ChibiOS + "os/hal/ports/STM32/"
+//TODO: Remove unnecessary
     files: [
       "LLD/DACv1/hal_dac_lld.h",
       "LLD/DACv1/hal_dac_lld.c",
