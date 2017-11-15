@@ -128,6 +128,18 @@ CppApplication
       "shellconf.h",
     ]
   }
+  Group { name: "Wake"
+    prefix: "wake/"
+    files: [
+    ]
+  }
+  Group { name: "Utils"
+    prefix: "utils/"
+    files: [
+      "ch_extended.h",
+    ]
+  }
+
   Group { name: "Port"
     prefix: ChibiOS + "os/common/ports/ARMCMx/"
     files: [
