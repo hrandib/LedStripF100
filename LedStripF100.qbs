@@ -54,8 +54,10 @@ CppApplication
   cpp.includePaths: [
     "config",
     "board",
+    "utils",
+    "wake",
     //Startup
-    ChibiOS + "os/common/startup/ARMCMx/compilers/GCC/",
+    ChibiOS + "os/common/startup/ARMCMx/compilers/GCC",
     ChibiOS + "os/common/startup/ARMCMx/devices/STM32F1xx",
     ChibiOS + "os/common/ext/CMSIS/include",
     ChibiOS + "os/common/ext/CMSIS/ST/STM32F1xx",
@@ -159,6 +161,9 @@ CppApplication
       "LLD/EXTIv1/hal_ext_lld.c",
       "LLD/GPIOv1/hal_pal_lld.h",
       "LLD/GPIOv1/hal_pal_lld.c",
+      "LLD/TIMv1/stm32_tim.h",
+      "LLD/TIMv1/hal_pwm_lld.h",
+      "LLD/TIMv1/hal_pwm_lld.c",
       "LLD/TIMv1/hal_st_lld.h",
       "LLD/TIMv1/hal_st_lld.c",
       "LLD/USARTv1/hal_serial_lld.h",
@@ -204,31 +209,10 @@ CppApplication
     ]
   }
   Group { name: "HAL"
-    prefix: ChibiOS + "os/hal/src/"
+    prefix: ChibiOS + "os/hal/"
     files: [
-      "hal.c",
-      "hal_buffers.c",
-      "hal_queues.c",
-      "hal_mmcsd.c",
-      "hal_adc.c",
-      "hal_dac.c",
-      "hal_ext.c",
-      "hal_gpt.c",
-      "hal_i2c.c",
-      "hal_i2s.c",
-      "hal_icu.c",
-      "hal_mac.c",
-      "hal_mmc_spi.c",
-      "hal_pal.c",
-      "hal_pwm.c",
-      "hal_qspi.c",
-      "hal_rtc.c",
-      "hal_sdc.c",
-      "hal_serial.c",
-      "hal_spi.c",
-      "hal_st.c",
-      "hal_uart.c",
-      "hal_wdg.c"
+      "src/hal*.c",
+      "include/hal*.h"
     ]
   }
 	Group { name: "No LTO"
