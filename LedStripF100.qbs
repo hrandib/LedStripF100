@@ -23,6 +23,8 @@ CppApplication
     "_GLIBCXX_HAVE_BROKEN_VSWPRINTF",
     "SHELL_CONFIG_FILE",
     "STM32F100xB",
+    //ChibiOS repository qbs build workaround
+    "SYSCALLS_CPP_HPP_"
 	]
   cpp.driverFlags: [
 		"-mcpu=cortex-m3",
@@ -105,7 +107,6 @@ CppApplication
     files: [
       "ch.hpp",
       "ch.cpp",
-      "syscalls_cpp.hpp",
       "syscalls_cpp.cpp",
     ]
   }
