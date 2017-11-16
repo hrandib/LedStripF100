@@ -135,6 +135,8 @@ CppApplication
     files: [
       "wake_base.cpp",
       "wake_base.h",
+      "crc8.h",
+      "crc8.cpp"
     ]
   }
   Group { name: "Utils"

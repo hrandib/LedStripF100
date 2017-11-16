@@ -22,6 +22,7 @@
 
 #include "ch.h"
 #include "hal.h"
+#include "crc8.h"
 
 static virtual_timer_t vt1, vt2;
 
