@@ -22,4 +22,6 @@
 #ifndef WAKE_BASE_H
 #define WAKE_BASE_H
 
+void InitUART();
+
 #endif // WAKE_BASE_H

@@ -16,13 +16,17 @@ CppApplication
   cpp.positionIndependentCode: false
 	cpp.cLanguageVersion: "c11"
   cpp.cxxLanguageVersion: "gnu++14"
-//  cpp.cxxFlags: ["-std=gnu++14"]
 	cpp.executableSuffix: ".elf"
   cpp.defines: [
 		"_GLIBCXX_USE_C99",
     "_GLIBCXX_HAVE_BROKEN_VSWPRINTF",
     "SHELL_CONFIG_FILE",
     "STM32F100xB",
+
+    //TODO: Remove editor helpers
+    "TRUE=1",
+    "FALSE=0",
+    "HAL_USE_UART"
 	]
   cpp.driverFlags: [
 		"-mcpu=cortex-m3",
@@ -32,7 +36,7 @@ CppApplication
     //"-nostdlib", "-nodefaultlibs"
 	]
   cpp.commonCompilerFlags: [
-    "-flto=8",
+//    "-flto=8",
     "-fdata-sections",
     "-ffunction-sections",
 //		"-Wno-unused-function",
@@ -129,6 +133,7 @@ CppApplication
   Group { name: "Wake"
     prefix: "wake/"
     files: [
+      "wake_base.cpp",
       "wake_base.h",
     ]
   }

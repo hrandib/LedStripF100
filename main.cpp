@@ -21,6 +21,7 @@
 #include "ch.h"
 #include "hal.h"
 #include "chprintf.h"
+#include "wake_base.h"
 
 /*===========================================================================*/
 /* Command line related.                                                     */
@@ -54,7 +55,6 @@ static PWMConfig pwmcfg = {
   #endif
 };
 
-
 /*
  * Application entry point.
  */
@@ -72,6 +72,8 @@ int main(void) {
 
   palSetPadMode(GPIOB, 0, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
   pwmStart(&PWMD3, &pwmcfg);
+
+  InitUART();
 
   while (true) {
     chThdSleepMilliseconds(1000);
