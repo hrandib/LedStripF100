@@ -27,6 +27,8 @@ namespace Wake {
 
   using namespace Rtos;
 
+  static ThreadStayPoint stayPoint;
+
   /*
    * This callback is invoked on a receive error, the errors mask is passed
    * as parameter.
@@ -45,7 +47,9 @@ namespace Wake {
    * was not ready to receive it, the character is passed as parameter.
    */
   void WakeBase::RXchar(UARTDriver* /*uartp*/, uint16_t /*c*/)
-  {  }
+  {
+    stayPoint.ResumeFromISR();
+  }
 
   /*
    * This callback is invoked when a transmission buffer has been completely
@@ -68,6 +72,7 @@ namespace Wake {
 
     uartStart(uartd_, &conf_);
 
+
     //Starts the transmission, it will be handled entirely in background.
 
     //    uartStartSend(&UARTD1, 13, "Starting...\r\n");
@@ -76,6 +81,7 @@ namespace Wake {
   void WakeBase::main()
   {
     while(true) {
+      stayPoint.Suspend();
 
     }
   }
