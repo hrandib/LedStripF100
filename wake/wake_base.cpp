@@ -57,11 +57,15 @@ namespace Wake {
   /*
    * This callback is invoked when a transmission has physically completed.
    */
-  void WakeBase::TXend2(UARTDriver*)
-  {  }
+  void WakeBase::TXend2(UARTDriver* uartp)
+  {
+    ClearDE(uartp);
+  }
 
   void WakeBase::Init()
   {
+    palSetPadMode(uartd_->portDE, uartd_->pinDE, PAL_MODE_OUTPUT_PUSHPULL);
+
     uartStart(uartd_, &conf_);
 
     //Starts the transmission, it will be handled entirely in background.
@@ -71,7 +75,9 @@ namespace Wake {
 
   void WakeBase::main()
   {
+    while(true) {
 
+    }
   }
 
 }//Wake

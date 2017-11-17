@@ -183,6 +183,10 @@
 #define STM32_UART_USART3_DMA_PRIORITY      0
 #define STM32_UART_DMA_ERROR_HOOK(uartp)    osalSysHalt("DMA failure")
 
+#define UART_DRIVER_EXT_FIELDS \
+  ioportid_t portDE; \
+  uint16_t pinDE;
+
 /*
  * WDG driver system settings.
  */

@@ -30,18 +30,34 @@ namespace Wake {
   class WakeBase : public Rtos::BaseStaticThread<256>
   {
   private:
-    static void RXerr(UARTDriver *uartp, uartflags_t e);
-    static void RXend(UARTDriver *uartp);
-    static void RXchar(UARTDriver *uartp, uint16_t c);
-    static void TXend1(UARTDriver *uartp);
-    static void TXend2(UARTDriver *uartp);
+    static void RXerr(UARTDriver* uartp, uartflags_t e);
+    static void RXend(UARTDriver* uartp);
+    static void RXchar(UARTDriver* uartp, uint16_t c);
+    static void TXend1(UARTDriver* uartp);
+    static void TXend2(UARTDriver* uartp);
+    static void SetDE(UARTDriver* uartp)
+    {
+      if(uartp->portDE) {
+        palSetPad(uartp->portDE, uartp->pinDE);
+      }
+    }
+    static void ClearDE(UARTDriver* uartp)
+    {
+      if(uartp->portDE) {
+        palClearPad(uartp->portDE, uartp->pinDE);
+      }
+    }
+
     UARTDriver* uartd_;
     UARTConfig conf_;
 
   public:
-    WakeBase(UARTDriver& uartd, size_t baud) : uartd_{&uartd},
+    WakeBase(UARTDriver& uartd, size_t baud, ioportid_t portDE = 0, uint16_t pinDE = 0) : uartd_{&uartd},
       conf_{ TXend1, TXend2, RXend, RXchar, RXerr, baud , 0, 0, USART_CR3_HDSEL }
-    {   }
+    {
+      uartd.portDE = portDE;
+      uartd.pinDE = pinDE;
+    }
     void Init();
     void main() override;
   };
