@@ -18,25 +18,12 @@
 #include <string.h>
 #include <cstdlib>
 
-#include "ch.h"
+#include "ch_extended.h"
 #include "hal.h"
 #include "chprintf.h"
 #include "wake_base.h"
 
-/*===========================================================================*/
-/* Command line related.                                                     */
-/*===========================================================================*/
-
-static void cmd_pwm(BaseSequentialStream *chp, int argc, char *argv[]) {
-  auto SetPWM = [](pwmcnt_t cnt) {
-    pwmEnableChannel(&PWMD3, 2, cnt);
-  };
-  if(!argc) {
-    chprintf(chp, "Usage: pwm\r\n");
-    return;
-  }
-  SetPWM((uint32_t)std::atoi(argv[0]));
-}
+using namespace Rtos;
 
 static PWMConfig pwmcfg = {
   4000000UL,                                    /* 10kHz PWM clock frequency.   */
@@ -55,6 +42,8 @@ static PWMConfig pwmcfg = {
   #endif
 };
 
+static Wake::WakeBase wake(UARTD1, 115200);
+
 /*
  * Application entry point.
  */
@@ -68,12 +57,13 @@ int main(void) {
    *   RTOS is active.
    */
   halInit();
-  chSysInit();
+  System::init();
+
+  wake.Init();
 
   palSetPadMode(GPIOB, 0, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
   pwmStart(&PWMD3, &pwmcfg);
 
-  InitUART();
 
   while (true) {
     chThdSleepMilliseconds(1000);

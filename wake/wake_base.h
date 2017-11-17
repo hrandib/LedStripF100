@@ -22,6 +22,29 @@
 #ifndef WAKE_BASE_H
 #define WAKE_BASE_H
 
-void InitUART();
+#include "ch_extended.h"
+#include "hal.h"
+
+namespace Wake {
+
+  class WakeBase : public Rtos::BaseStaticThread<256>
+  {
+  private:
+    static void RXerr(UARTDriver *uartp, uartflags_t e);
+    static void RXend(UARTDriver *uartp);
+    static void RXchar(UARTDriver *uartp, uint16_t c);
+    static void TXend1(UARTDriver *uartp);
+    static void TXend2(UARTDriver *uartp);
+    UARTDriver* uartd_;
+    UARTConfig conf_;
+
+  public:
+    WakeBase(UARTDriver& uartd, size_t baud) : uartd_{&uartd},
+      conf_{ TXend1, TXend2, RXend, RXchar, RXerr, baud , 0, 0, USART_CR3_HDSEL }
+    {   }
+    void Init();
+    void main() override;
+  };
+}//Wake
 
 #endif // WAKE_BASE_H
