@@ -25,7 +25,10 @@
 #include "ch.hpp"
 
 namespace Rtos {
-  using namespace chibios_rt;
+
+  using chibios_rt::System;
+  using chibios_rt::ThreadReference;
+  using chibios_rt::BaseStaticThread;
 
   struct SysLockGuard
   {
@@ -44,6 +47,31 @@ namespace Rtos {
     ~SysLockGuardFromISR() {
       System::unlockFromIsr();
     }
+  };
+
+  //chibios_rt::ThreadStayPoint implementation is broken
+  class ThreadStayPoint
+  {
+  private:
+    ::thread_reference_t ref_;
+  public:
+    ThreadStayPoint() : ref_{}
+    {  }
+    msg_t Suspend(systime_t timeout = 0) {
+      SysLockGuard lock;
+      return timeout ? chThdSuspendTimeoutS(&ref_, timeout) : chThdSuspendS(&ref_);
+    }
+    void Resume(msg_t msg = MSG_OK)
+    {
+      SysLockGuard lock;
+      chThdResumeS(&ref_, msg);
+    }
+    void ResumeFromISR(msg_t msg = MSG_OK)
+    {
+      SysLockGuardFromISR lock;
+      chThdResumeI(&ref_, msg);
+    }
+
   };
 }
 
