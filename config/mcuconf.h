@@ -184,8 +184,7 @@
 #define STM32_UART_DMA_ERROR_HOOK(uartp)    osalSysHalt("DMA failure")
 
 #define UART_DRIVER_EXT_FIELDS \
-  ioportid_t portDE; \
-  uint16_t pinDE;
+  void* customData; \
 
 /*
  * WDG driver system settings.
