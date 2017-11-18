@@ -15,7 +15,7 @@ CppApplication
   cpp.enableRtti: false
   cpp.positionIndependentCode: false
 	cpp.cLanguageVersion: "c11"
-  cpp.cxxLanguageVersion: "gnu++14"
+  cpp.cxxLanguageVersion: "gnu++1z"
 	cpp.executableSuffix: ".elf"
   cpp.defines: [
 		"_GLIBCXX_USE_C99",

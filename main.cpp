@@ -42,7 +42,7 @@ static PWMConfig pwmcfg = {
   #endif
 };
 
-static Wake::WakeBase wake(UARTD1, 115200, GPIOA, 10);
+static Wk::Wake<> wake(UARTD1, 115200, GPIOA, 10);
 
 /*
  * Application entry point.

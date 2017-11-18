@@ -22,7 +22,7 @@
 
 #include "wake_base.h"
 
-namespace Wake {
+namespace Wk {
 
   using namespace Rtos;
 
@@ -48,24 +48,24 @@ namespace Wake {
     WakeBase& wake = *reinterpret_cast<WakeBase*>(uartp->customData);
     uint8_t dataByte = static_cast<uint8_t>(dataByte_);
     if(dataByte == FEND) {
-      wake.prevByte = dataByte;
-      wake.crc.Reset(CRC_INIT);
-      wake.state = ADDR;
-      wake.crc(dataByte);
+      wake.prevByte_ = dataByte;
+      wake.crc_.Reset(CRC_INIT);
+      wake.state_ = ADDR;
+      wake.crc_(dataByte);
       return;
     }
-    if(wake.state == WAIT_FEND) {
+    if(wake.state_ == WAIT_FEND) {
       return;
     }
-    uint8_t prev = wake.prevByte;               //сохранение старого пре-байта
-    wake.prevByte = dataByte;              //обновление пре-байта
+    uint8_t prev = wake.prevByte_;               //сохранение старого пре-байта
+    wake.prevByte_ = dataByte;              //обновление пре-байта
     if(prev == FESC) {
       if(dataByte == TFESC)            //а байт данных равен TFESC,
         dataByte = FESC;               //то заменить его на FESC
       else if(dataByte == TFEND)       //если байт данных равен TFEND,
         dataByte = FEND;          //то заменить его на FEND
       else {
-        wake.state = WAIT_FEND;     //для всех других значений байта данных,
+        wake.state_ = WAIT_FEND;     //для всех других значений байта данных,
 //          cmd = C_ERR;         //следующего за FESC, ошибка
         return;
       }
@@ -73,57 +73,57 @@ namespace Wake {
     else if(dataByte == FESC) {            //если байт данных равен FESC, он просто
       return;                             //запоминается в пре-байте
     }
-    switch(wake.state) {
+    switch(wake.state_) {
     case ADDR:                     //-----> ожидание приема адреса
       if(dataByte & 0x80) {
-        wake.crc(dataByte); //то обновление CRC и
+        wake.crc_(dataByte); //то обновление CRC и
         dataByte &= 0x7F; //обнуляем бит 7, получаем истинный адрес
         if(dataByte == 0 || dataByte == DEFAULT_ADDRESS/* || dataByte == groupAddr_nv*/) {
-          wake.packetData.addr = dataByte;
-          wake.state = CMD;       //переходим к приему команды
+          wake.packetData_.addr = dataByte;
+          wake.state_ = CMD;       //переходим к приему команды
           break;
         }
-        wake.state = WAIT_FEND;        //адрес не совпал, ожидание нового пакета
+        wake.state_ = WAIT_FEND;        //адрес не совпал, ожидание нового пакета
         break;
       }
       else {
-        wake.packetData.addr = 0;	//если бит 7 данных равен нулю, то
+        wake.packetData_.addr = 0;	//если бит 7 данных равен нулю, то
       }
-      wake.state = CMD;					//сразу переходим к приему команды
+      wake.state_ = CMD;					//сразу переходим к приему команды
     case CMD:                      //-----> ожидание приема команды
       if(dataByte & 0x80) {
-        wake.state = WAIT_FEND;        //если бит 7 не равен нулю,
+        wake.state_ = WAIT_FEND;        //если бит 7 не равен нулю,
 //          cmd = C_ERR;            //то ошибка
         break;
       }
-      wake.packetData.cmd = dataByte;          //сохранение команды
-      wake.crc(dataByte);				//обновление CRC
-      wake.state = NBT;           //переходим к приему количества байт
+      wake.packetData_.cmd = dataByte;          //сохранение команды
+      wake.crc_(dataByte);				//обновление CRC
+      wake.state_ = NBT;           //переходим к приему количества байт
       break;
     case NBT:
       if(dataByte > WAKEDATABUFSIZE) {
-        wake.state = WAIT_FEND;
+        wake.state_ = WAIT_FEND;
 //          cmd = C_ERR;		//то ошибка
         break;
       }
-      wake.packetData.n = dataByte;
-      wake.crc(dataByte);		//обновление CRC
-      wake.ptr = 0;			//обнуляем указатель данных
-      wake.state = DATA;		//переходим к приему данных
+      wake.packetData_.n = dataByte;
+      wake.crc_(dataByte);		//обновление CRC
+      wake.ptr_ = 0;			//обнуляем указатель данных
+      wake.state_ = DATA;		//переходим к приему данных
       break;
     case DATA:
-      if(wake.ptr < wake.packetData.n) {
-        wake.packetData.buf[wake.ptr++] = dataByte; //то сохранение байта данных,
-        wake.crc(dataByte);  //обновление CRC
+      if(wake.ptr_ < wake.packetData_.n) {
+        wake.packetData_.buf[wake.ptr_++] = dataByte; //то сохранение байта данных,
+        wake.crc_(dataByte);  //обновление CRC
         break;
       }
-      if(dataByte != wake.crc.GetResult()) {
-        wake.state = WAIT_FEND;		//если CRC не совпадает,
+      if(dataByte != wake.crc_.GetResult()) {
+        wake.state_ = WAIT_FEND;		//если CRC не совпадает,
 //          cmd = C_ERR;			//то ошибка
         break;
       }
-      wake.state = WAIT_FEND;		//прием пакета завершен,
-      wake.stayPoint_.ResumeFromISR(wake.packetData.cmd);		//загрузка команды на выполнение
+      wake.state_ = WAIT_FEND;		//прием пакета завершен,
+      wake.stayPoint_.ResumeFromISR(wake.packetData_.cmd);		//загрузка команды на выполнение
       break;
       //warning suppress
     case WAIT_FEND:
@@ -144,26 +144,6 @@ namespace Wake {
   void WakeBase::TXend2(UARTDriver* uartp)
   {
     ClearDE(uartp);
-  }
-
-  void WakeBase::Init()
-  {
-    palSetPadMode(portDE_, pinDE_, PAL_MODE_OUTPUT_PUSHPULL);
-    palClearPad(portDE_, pinDE_);
-
-    uartStart(uartd_, &conf_);
-
-    start(NORMALPRIO - 1);
-  }
-
-  void WakeBase::main()
-  {
-    while(true) {
-      msg_t msg = stayPoint_.Suspend();
-      SetDE(uartd_);
-
-      uartStartSend(uartd_, 1, &msg);
-    }
   }
 
 }//Wake

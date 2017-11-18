@@ -29,7 +29,10 @@
 #include "hal.h"
 #include "crc8.h"
 
-namespace Wake {
+namespace Wk {
+
+  static constexpr size_t INSTRUCTION_SET_VER_MAJOR = 2;
+  static constexpr size_t INSTRUCTION_SET_VER_MINOR = 1;
 
   enum {
     CRC_INIT = 0xDE,
@@ -61,10 +64,8 @@ namespace Wake {
     C_ON,
     C_ToggleOnOff,
     C_SAVESETTINGS,
-#if BOOTLOADER_EXIST
-    C_REBOOT,
-#endif
-    C_BASE_END
+
+    C_BASE_NUMBER
   };
 
   enum Err {
@@ -97,7 +98,61 @@ namespace Wake {
     addrNode
   };
 
-  class WakeData {
+  //Every module should implement the same interface
+  struct NullModule
+  {
+    static uint8_t GetDeviceMask() { return DevNull; }
+    static void Init() { }
+    static bool Process() { return false; }
+    static void SaveState() { }
+    static void On() { }
+    static void Off() { }
+    static uint8_t GetDeviceFeatures(uint8_t) { return 0; }
+    static void ToggleOnOff() { }
+  };
+
+  namespace _impl {
+    template<typename... Modules>
+    struct ModuleList
+    {
+      static constexpr uint8_t GetDeviceMask()
+      {
+        return (NullModule::GetDeviceMask() | ... | Modules::GetDeviceMask());
+      }
+      static void Init()
+      {
+        (NullModule::Init(), ... , Modules::Init());
+      }
+      static void Process()
+      {
+        (NullModule::Process(), ... , Modules::Process());
+      }
+      //TODO: Implement
+      static constexpr uint8_t GetDeviceFeatures(uint8_t/* deviceMask*/)
+      {
+        return 0;
+      }
+      static void On()
+      {
+        (NullModule::On(), ... , Modules::On());
+      }
+      static void Off()
+      {
+        (NullModule::Off(), ... , Modules::Off());
+      }
+      static void ToggleOnOff()
+      {
+        (NullModule::ToggleOnOff(), ... , Modules::ToggleOnOff());
+      }
+    };
+  }
+
+//  template<typename... Modules>
+//  using ModuleList = _impl::ModuleList<NullModule, Modules...>;
+
+  using _impl::ModuleList;
+
+  class WakeBase {
   public:
     static constexpr size_t WAKEDATABUFSIZE = 128;
     struct Packet {
@@ -107,19 +162,12 @@ namespace Wake {
       uint8_t buf[WAKEDATABUFSIZE];
     };
   protected:
-    volatile Packet packetData;
-    State state;
-    uint8_t prevByte;
-    Crc::Crc8 crc;
-  };
-
-  class WakeBase : public Rtos::BaseStaticThread<256>, WakeData {
-  private:
     static void RXerr(UARTDriver* uartp, uartflags_t e);
     static void RXend(UARTDriver* uartp);
     static void RXchar(UARTDriver* uartp, uint16_t c);
     static void TXend1(UARTDriver* uartp);
     static void TXend2(UARTDriver* uartp);
+
     static void SetDE(UARTDriver* uartp) {
       uartp->usart->CR3 &= ~USART_CR3_DMAR;
       WakeBase& wake = *reinterpret_cast<WakeBase*>(uartp->customData);
@@ -138,37 +186,178 @@ namespace Wake {
 
     Rtos::ThreadStayPoint stayPoint_;
 
-    UARTDriver* uartd_;
-    UARTConfig conf_;
-
     ioportid_t portDE_;
     uint16_t pinDE_;
 
-    volatile uint8_t ptr;       //data pointer in Rx buffer
+    Packet packetData_;
+    uint8_t ptr_;       //data index in Rx buffer
+    State state_;
+    uint8_t prevByte_;
+    Crc::Crc8 crc_;
+  };
+
+  template<typename... Modules>
+  class Wake : public WakeBase, public Rtos::BaseStaticThread<256> {
+  private:
+    using Base = WakeBase;
+    using ModuleList_ = ModuleList<Modules...>;
+
+    UARTDriver* uartd_;
+    UARTConfig conf_;
 
     bool CheckNodeAddress()
     {
-      uint8_t taddr = packetData.buf[0];
-      return taddr == (~packetData.buf[1] & 0xFF)
+      uint8_t taddr = packetData_.buf[0];
+      return taddr == (~packetData_.buf[1] & 0xFF)
              && ((taddr && taddr < 80) || (taddr > 112 && taddr < 128));
     }
 
     bool CheckGroupAddress()
     {
-      uint8_t taddr = packetData.buf[0];
-      return taddr == (~packetData.buf[1] & 0xFF)
+      uint8_t taddr = packetData_.buf[0];
+      return taddr == (~packetData_.buf[1] & 0xFF)
              && taddr > 79 && taddr < 96;
     }
 
-  public:
-    WakeBase(UARTDriver& uartd, size_t baud, ioportid_t portDE = 0, uint16_t pinDE = 0) : uartd_{&uartd},
-      conf_{ TXend1, TXend2, RXend, RXchar, RXerr, baud, 0, 0, USART_CR3_HDSEL },
-      portDE_{portDE}, pinDE_{pinDE}
+    void ProcessDefault(Cmd cmd)
     {
+      if(cmd) {
+        switch(cmd) {
+        case C_NOP: case C_ECHO: case C_BASE_NUMBER:
+          break;
+        case C_ERR:
+          cmd = C_NOP;
+          return;
+        case C_GETINFO:
+          //Common device info
+          if (!packetData_.n)	{
+            packetData_.buf[0] = ERR_NO;
+            packetData_.buf[1] = 0;//moduleList::deviceMask;
+            packetData_.buf[2] = INSTRUCTION_SET_VER_MAJOR << 4 | INSTRUCTION_SET_VER_MINOR;
+            packetData_.n = 3;
+          }
+          //Info about single logical device
+          else if(packetData_.n == 1)	{
+            if(packetData_.buf[0] < 7) {
+              const uint8_t deviceMask = uint8_t(1 << packetData_.buf[0]);
+              //Device is available
+              if(ModuleList_::GetDeviceMask() & deviceMask) {
+                packetData_.buf[0] = ERR_NO;
+                packetData_.buf[1] = ModuleList_::GetDeviceFeatures(deviceMask);
+                packetData_.n = 2;
+              }
+              //device not available
+              else {
+                packetData_.buf[0] = ERR_NI;
+              }
+            }
+            //else if(packetData.buf[0] == 7) //custom device
+          }
+          else {
+            packetData_.buf[0] = ERR_PA;
+            packetData_.n = 1;
+          }
+          break;
+        case C_SETNODEADDRESS:
+          packetData_.n = 1;
+          packetData_.buf[0] = ERR_NI;
+          //SetAddress(addrNode);
+          break;
+        case C_SETGROUPADDRESS:
+//          if(!packetData_.n) {
+//            packetData.n = 2;
+//            packetData.buf[0] = ERR_NO;
+//            packetData.buf[1] = groupAddr_nv;
+//          }
+//          else {
+//            SetAddress(addrGroup);
+//          }
+          packetData_.n = 1;
+          packetData_.buf[0] = ERR_NI;
+          break;
+        case C_GETOPTIME:
+          packetData_.n = 1;
+          packetData_.buf[0] = ERR_NI;
+          break;
+        case C_OFF:
+          if(!packetData_.n) {
+            packetData_.buf[0] = Wk::ERR_NO;
+            ModuleList_::Off();
+          }
+          else {
+            packetData_.buf[0] = Wk::ERR_PA;
+          }
+          packetData_.n = 1;
+          break;
+        case C_ON:
+          if(!packetData_.n) {
+            packetData_.buf[0] = Wk::ERR_NO;
+            ModuleList_::On();
+          }
+          else {
+            packetData_.buf[0] = Wk::ERR_PA;
+          }
+          packetData_.n = 1;
+          break;
+        case C_ToggleOnOff:
+          if(!packetData_.n) {
+            packetData_.buf[0] = Wk::ERR_NO;
+            ModuleList_::ToggleOnOff();
+          }
+          else {
+            packetData_.buf[0] = Wk::ERR_PA;
+          }
+          packetData_.n = 1;
+          break;
+        case C_SAVESETTINGS:
+//          if(!packetData_.n) {
+//            packetData_.buf[0] = ERR_NO;
+//            ModuleList_::SaveState();
+//          }
+//          else packetData_.buf[0] = ERR_PA;
+//          packetData_.n = 1;
+          break;
+        default:
+          //Check if command not processed in modules
+          if(/*ModuleList_::Process()*/false) {
+//            processedMask = 0;
+            packetData_.buf[0] = Wk::ERR_NI;
+            packetData_.n = 1;
+          }
+        } //Switch
+        if(packetData_.addr == DEFAULT_ADDRESS) {
+          //...
+          SetDE(uartd_);
+          uartStartSend(uartd_, sizeof(Packet), &packetData_);
+
+        }
+      }
+    }
+  public:
+    Wake(UARTDriver& uartd, size_t baud, ioportid_t portDE = 0, uint16_t pinDE = 0) : uartd_{&uartd},
+      conf_{ TXend1, TXend2, RXend, RXchar, RXerr, baud, 0, 0, USART_CR3_HDSEL }
+    {
+      portDE_ = portDE;
+      pinDE_ = pinDE;
       uartd.customData = this;
     }
-    void Init();
-    void main() override;
+    void Init()
+    {
+      palSetPadMode(portDE_, pinDE_, PAL_MODE_OUTPUT_PUSHPULL);
+      palClearPad(portDE_, pinDE_);
+
+      uartStart(uartd_, &conf_);
+
+      start(NORMALPRIO - 1);
+    }
+
+    void main() override
+    {
+      while(true) {
+        msg_t msg = stayPoint_.Suspend();
+        ProcessDefault((Cmd)msg);
+      }
+    }
   };
 }//Wake
 
