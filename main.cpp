@@ -59,13 +59,15 @@ int main(void) {
   halInit();
   System::init();
 
-  wake.Init();
 
   palSetPadMode(GPIOB, 0, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
   pwmStart(&PWMD3, &pwmcfg);
-
+  wake.Init();
 
   while (true) {
-    chThdSleepMilliseconds(1000);
+    pwmEnableChannel(&PWMD3, 2, 10);
+    BaseThread::sleep(MS2ST(2200));
+    pwmEnableChannel(&PWMD3, 2, 0);
+    BaseThread::sleep(MS2ST(2100));
   }
 }

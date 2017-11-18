@@ -9,7 +9,7 @@ CppApplication
 
 	type: ["application", "printsize"]
 	consoleApplication: true
-  cpp.optimization: "small"
+  cpp.optimization: "none"
 	cpp.debugInformation: false
   cpp.enableExceptions: false
   cpp.enableRtti: false

@@ -27,6 +27,7 @@
 namespace Rtos {
 
   using chibios_rt::System;
+  using chibios_rt::BaseThread;
   using chibios_rt::ThreadReference;
   using chibios_rt::BaseStaticThread;
 

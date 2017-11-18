@@ -88,7 +88,7 @@
  * PA10 - Normal input      (USART1 RX).
  */
 #define VAL_GPIOACRL            0x88888888      /*  PA7...PA0 */
-#define VAL_GPIOACRH            0x888888B8      /* PA15...PA8 */
+#define VAL_GPIOACRH            0x888888A8      /* PA15...PA8 */
 #define VAL_GPIOAODR            0xFFFFFFFF
 
 /*

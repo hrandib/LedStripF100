@@ -46,9 +46,10 @@ namespace Wake {
    * This callback is invoked when a character is received but the application
    * was not ready to receive it, the character is passed as parameter.
    */
-  void WakeBase::RXchar(UARTDriver* /*uartp*/, uint16_t /*c*/)
+  void WakeBase::RXchar(UARTDriver* /*uartp*/, uint16_t c)
   {
-    stayPoint.ResumeFromISR();
+//    pwmEnableChannel(&PWMD3, 2, 2000);
+      stayPoint.ResumeFromISR(c);
   }
 
   /*
@@ -69,20 +70,20 @@ namespace Wake {
   void WakeBase::Init()
   {
     palSetPadMode(uartd_->portDE, uartd_->pinDE, PAL_MODE_OUTPUT_PUSHPULL);
+    palClearPad(uartd_->portDE, uartd_->pinDE);
 
     uartStart(uartd_, &conf_);
 
-
-    //Starts the transmission, it will be handled entirely in background.
-
-    //    uartStartSend(&UARTD1, 13, "Starting...\r\n");
+    start(NORMALPRIO - 1);
   }
 
   void WakeBase::main()
   {
     while(true) {
-      stayPoint.Suspend();
-
+      msg_t msg = stayPoint.Suspend();
+      SetDE(uartd_);
+      sleep(MS2ST(1));
+      uartStartSend(uartd_, 1, &msg);
     }
   }
 

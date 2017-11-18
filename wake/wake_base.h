@@ -37,15 +37,18 @@ namespace Wake {
     static void TXend2(UARTDriver* uartp);
     static void SetDE(UARTDriver* uartp)
     {
+      uartp->usart->CR3 &= ~USART_CR3_DMAR;
       if(uartp->portDE) {
         palSetPad(uartp->portDE, uartp->pinDE);
       }
     }
     static void ClearDE(UARTDriver* uartp)
     {
+      uartp->usart->SR = ~USART_SR_RXNE;
       if(uartp->portDE) {
         palClearPad(uartp->portDE, uartp->pinDE);
       }
+      uartp->usart->CR3 |= USART_CR3_DMAR;
     }
 
     UARTDriver* uartd_;
