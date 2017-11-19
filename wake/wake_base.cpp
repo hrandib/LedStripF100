@@ -106,13 +106,13 @@ namespace Wk {
 //          cmd = C_ERR;		//то ошибка
         break;
       }
-      wake.packetData_.n = dataByte;
+      wake.packetData_.payloadSize = dataByte;
       wake.crc_(dataByte);		//обновление CRC
       wake.ptr_ = 0;			//обнуляем указатель данных
       wake.state_ = DATA;		//переходим к приему данных
       break;
     case DATA:
-      if(wake.ptr_ < wake.packetData_.n) {
+      if(wake.ptr_ < wake.packetData_.payloadSize) {
         wake.packetData_.buf[wake.ptr_++] = dataByte; //то сохранение байта данных,
         wake.crc_(dataByte);  //обновление CRC
         break;
@@ -148,7 +148,42 @@ namespace Wk {
 
   size_t WakeBase::FillTxBuf()
   {
-    return 0;
+    size_t dataIndex = 0;
+    uint8_t dataByte;
+    crc_.Reset(CRC_INIT);
+    for(int32_t i = -4; i <= packetData_.payloadSize; ++i) {
+      //this needed only for master
+      if(i == -3 && !packetData_.addr) {
+        ++i;
+      }
+      if(i == -4) {         //FEND
+        dataByte = FEND;
+      }
+      else if(i == -3) {	//address
+        dataByte = packetData_.addr | 0x80;
+      }
+      else if(i == -2) {	//command
+        dataByte = packetData_.cmd;
+      }
+      else if(i == -1) {	//payload count
+        dataByte = packetData_.payloadSize;
+      }
+      else if(i == packetData_.payloadSize) { //crc
+        dataByte = crc_.GetResult();
+      }
+      else {
+        dataByte = packetData_.buf[i];  //data
+      }
+      crc_(dataByte);
+      if(i > -4) {
+        if(dataByte == FEND || dataByte == FESC) {
+          txBuf_[dataIndex++] = FESC;
+          dataByte = (dataByte == FEND ? TFEND : TFESC);
+        }
+      }
+      txBuf_[dataIndex++] = dataByte;
+    }
+    return dataIndex;
   }
 
 }//Wake

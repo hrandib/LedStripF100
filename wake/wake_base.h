@@ -166,7 +166,7 @@ namespace Wk {
     struct Packet {
       uint8_t addr;
       uint8_t cmd;
-      uint8_t n;
+      uint8_t payloadSize;
       uint8_t buf[WAKEDATABUFSIZE];
     };
   protected:
@@ -249,21 +249,21 @@ namespace Wk {
           return;
         case C_GETINFO:
           //Common device info
-          if(!packetData_.n) {
+          if(!packetData_.payloadSize) {
             packetData_.buf[0] = ERR_NO;
             packetData_.buf[1] = 0;//moduleList::deviceMask;
             packetData_.buf[2] = INSTRUCTION_SET_VER_MAJOR << 4 | INSTRUCTION_SET_VER_MINOR;
-            packetData_.n = 3;
+            packetData_.payloadSize = 3;
           }
           //Info about single logical device
-          else if(packetData_.n == 1) {
+          else if(packetData_.payloadSize == 1) {
             if(packetData_.buf[0] < 7) {
               const uint8_t deviceMask = uint8_t(1 << packetData_.buf[0]);
               //Device is available
               if(ModuleList_::GetDeviceMask() & deviceMask) {
                 packetData_.buf[0] = ERR_NO;
                 packetData_.buf[1] = ModuleList_::GetDeviceFeatures(deviceMask);
-                packetData_.n = 2;
+                packetData_.payloadSize = 2;
               }
               //device not available
               else {
@@ -274,11 +274,11 @@ namespace Wk {
           }
           else {
             packetData_.buf[0] = ERR_PA;
-            packetData_.n = 1;
+            packetData_.payloadSize = 1;
           }
           break;
         case C_SETNODEADDRESS:
-          packetData_.n = 1;
+          packetData_.payloadSize = 1;
           packetData_.buf[0] = ERR_NI;
           //SetAddress(addrNode);
           break;
@@ -291,42 +291,42 @@ namespace Wk {
 //          else {
 //            SetAddress(addrGroup);
 //          }
-          packetData_.n = 1;
+          packetData_.payloadSize = 1;
           packetData_.buf[0] = ERR_NI;
           break;
         case C_GETOPTIME:
-          packetData_.n = 1;
+          packetData_.payloadSize = 1;
           packetData_.buf[0] = ERR_NI;
           break;
         case C_OFF:
-          if(!packetData_.n) {
+          if(!packetData_.payloadSize) {
             packetData_.buf[0] = Wk::ERR_NO;
             ModuleList_::Off();
           }
           else {
             packetData_.buf[0] = Wk::ERR_PA;
           }
-          packetData_.n = 1;
+          packetData_.payloadSize = 1;
           break;
         case C_ON:
-          if(!packetData_.n) {
+          if(!packetData_.payloadSize) {
             packetData_.buf[0] = Wk::ERR_NO;
             ModuleList_::On();
           }
           else {
             packetData_.buf[0] = Wk::ERR_PA;
           }
-          packetData_.n = 1;
+          packetData_.payloadSize = 1;
           break;
         case C_ToggleOnOff:
-          if(!packetData_.n) {
+          if(!packetData_.payloadSize) {
             packetData_.buf[0] = Wk::ERR_NO;
             ModuleList_::ToggleOnOff();
           }
           else {
             packetData_.buf[0] = Wk::ERR_PA;
           }
-          packetData_.n = 1;
+          packetData_.payloadSize = 1;
           break;
         case C_SAVESETTINGS:
 //          if(!packetData_.n) {
@@ -341,7 +341,7 @@ namespace Wk {
           if(/*ModuleList_::Process()*/false) {
 //            processedMask = 0;
             packetData_.buf[0] = Wk::ERR_NI;
-            packetData_.n = 1;
+            packetData_.payloadSize = 1;
           }
         } //Switch
       }
@@ -368,8 +368,8 @@ namespace Wk {
         msg_t msg = stayPoint_.Suspend();
         ProcessDefault((Cmd)msg);
         if(IsNotBroadcast()) {
-          size_t size = FillTxBuf();
           SetDE(uartd_);
+          size_t size = FillTxBuf();
           uartStartSend(uartd_, size, txBuf_);
         }
       }
