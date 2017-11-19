@@ -99,33 +99,40 @@ namespace Wk {
   };
 
   //Every module should implement the same interface
-  struct NullModule
-  {
-    static uint8_t GetDeviceMask() { return DevNull; }
+  struct NullModule {
+    static uint8_t GetDeviceMask()
+    {
+      return DevNull;
+    }
     static void Init() { }
-    static bool Process() { return false; }
+    static bool Process()
+    {
+      return false;
+    }
     static void SaveState() { }
     static void On() { }
     static void Off() { }
-    static uint8_t GetDeviceFeatures(uint8_t) { return 0; }
+    static uint8_t GetDeviceFeatures(uint8_t)
+    {
+      return 0;
+    }
     static void ToggleOnOff() { }
   };
 
   namespace _impl {
     template<typename... Modules>
-    struct ModuleList
-    {
+    struct ModuleList {
       static constexpr uint8_t GetDeviceMask()
       {
         return (NullModule::GetDeviceMask() | ... | Modules::GetDeviceMask());
       }
       static void Init()
       {
-        (NullModule::Init(), ... , Modules::Init());
+        (NullModule::Init(), ..., Modules::Init());
       }
       static void Process()
       {
-        (NullModule::Process(), ... , Modules::Process());
+        (NullModule::Process(), ..., Modules::Process());
       }
       //TODO: Implement
       static constexpr uint8_t GetDeviceFeatures(uint8_t/* deviceMask*/)
@@ -134,15 +141,15 @@ namespace Wk {
       }
       static void On()
       {
-        (NullModule::On(), ... , Modules::On());
+        (NullModule::On(), ..., Modules::On());
       }
       static void Off()
       {
-        (NullModule::Off(), ... , Modules::Off());
+        (NullModule::Off(), ..., Modules::Off());
       }
       static void ToggleOnOff()
       {
-        (NullModule::ToggleOnOff(), ... , Modules::ToggleOnOff());
+        (NullModule::ToggleOnOff(), ..., Modules::ToggleOnOff());
       }
     };
   }
@@ -152,7 +159,8 @@ namespace Wk {
 
   using _impl::ModuleList;
 
-  class WakeBase {
+  class WakeBase
+  {
   public:
     static constexpr size_t WAKEDATABUFSIZE = 128;
     struct Packet {
@@ -168,14 +176,16 @@ namespace Wk {
     static void TXend1(UARTDriver* uartp);
     static void TXend2(UARTDriver* uartp);
 
-    static void SetDE(UARTDriver* uartp) {
+    static void SetDE(UARTDriver* uartp)
+    {
       uartp->usart->CR3 &= ~USART_CR3_DMAR;
       WakeBase& wake = *reinterpret_cast<WakeBase*>(uartp->customData);
       if(wake.portDE_) {
         palSetPad(wake.portDE_, wake.pinDE_);
       }
     }
-    static void ClearDE(UARTDriver* uartp) {
+    static void ClearDE(UARTDriver* uartp)
+    {
       uartp->usart->SR = ~USART_SR_RXNE;
       WakeBase& wake = *reinterpret_cast<WakeBase*>(uartp->customData);
       if(wake.portDE_) {
@@ -200,7 +210,8 @@ namespace Wk {
   };
 
   template<typename... Modules>
-  class Wake : public WakeBase, public Rtos::BaseStaticThread<256> {
+  class Wake : public WakeBase, public Rtos::BaseStaticThread<256>
+  {
   private:
     using Base = WakeBase;
     using ModuleList_ = ModuleList<Modules...>;
@@ -229,7 +240,8 @@ namespace Wk {
     {
       if(cmd) {
         switch(cmd) {
-        case C_NOP: case C_ECHO:
+        case C_NOP:
+        case C_ECHO:
         case C_BASE_NUMBER: // warning suppress
           break;
         case C_ERR:
@@ -237,14 +249,14 @@ namespace Wk {
           return;
         case C_GETINFO:
           //Common device info
-          if (!packetData_.n)	{
+          if(!packetData_.n) {
             packetData_.buf[0] = ERR_NO;
             packetData_.buf[1] = 0;//moduleList::deviceMask;
             packetData_.buf[2] = INSTRUCTION_SET_VER_MAJOR << 4 | INSTRUCTION_SET_VER_MINOR;
             packetData_.n = 3;
           }
           //Info about single logical device
-          else if(packetData_.n == 1)	{
+          else if(packetData_.n == 1) {
             if(packetData_.buf[0] < 7) {
               const uint8_t deviceMask = uint8_t(1 << packetData_.buf[0]);
               //Device is available
@@ -346,9 +358,7 @@ namespace Wk {
     {
       palSetPadMode(portDE_, pinDE_, PAL_MODE_OUTPUT_PUSHPULL);
       palClearPad(portDE_, pinDE_);
-
       uartStart(uartd_, &conf_);
-
       start(NORMALPRIO - 1);
     }
 
