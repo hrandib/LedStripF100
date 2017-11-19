@@ -184,6 +184,7 @@ namespace Wk {
       uartp->usart->CR3 |= USART_CR3_DMAR;
     }
 
+    uint8_t txBuf_[sizeof(Packet) + 8];
     Rtos::ThreadStayPoint stayPoint_;
 
     ioportid_t portDE_;
@@ -194,6 +195,8 @@ namespace Wk {
     State state_;
     uint8_t prevByte_;
     Crc::Crc8 crc_;
+
+    size_t FillTxBuf();
   };
 
   template<typename... Modules>
@@ -205,25 +208,29 @@ namespace Wk {
     UARTDriver* uartd_;
     UARTConfig conf_;
 
-    bool CheckNodeAddress()
+    bool IsNodeAddress()
     {
       uint8_t taddr = packetData_.buf[0];
       return taddr == (~packetData_.buf[1] & 0xFF)
              && ((taddr && taddr < 80) || (taddr > 112 && taddr < 128));
     }
-
-    bool CheckGroupAddress()
+    bool IsGroupAddress()
     {
       uint8_t taddr = packetData_.buf[0];
       return taddr == (~packetData_.buf[1] & 0xFF)
              && taddr > 79 && taddr < 96;
+    }
+    bool IsNotBroadcast()
+    {
+      return packetData_.addr != 0;
     }
 
     void ProcessDefault(Cmd cmd)
     {
       if(cmd) {
         switch(cmd) {
-        case C_NOP: case C_ECHO: case C_BASE_NUMBER:
+        case C_NOP: case C_ECHO:
+        case C_BASE_NUMBER: // warning suppress
           break;
         case C_ERR:
           cmd = C_NOP;
@@ -325,12 +332,6 @@ namespace Wk {
             packetData_.n = 1;
           }
         } //Switch
-        if(packetData_.addr == DEFAULT_ADDRESS) {
-          //...
-          SetDE(uartd_);
-          uartStartSend(uartd_, sizeof(Packet), &packetData_);
-
-        }
       }
     }
   public:
@@ -356,6 +357,11 @@ namespace Wk {
       while(true) {
         msg_t msg = stayPoint_.Suspend();
         ProcessDefault((Cmd)msg);
+        if(IsNotBroadcast()) {
+          size_t size = FillTxBuf();
+          SetDE(uartd_);
+          uartStartSend(uartd_, size, txBuf_);
+        }
       }
     }
   };

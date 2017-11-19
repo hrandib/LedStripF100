@@ -146,4 +146,9 @@ namespace Wk {
     ClearDE(uartp);
   }
 
+  size_t WakeBase::FillTxBuf()
+  {
+    return 0;
+  }
+
 }//Wake
