@@ -31,6 +31,11 @@ namespace Rtos {
   using chibios_rt::ThreadReference;
   using chibios_rt::BaseStaticThread;
 
+  enum class Status {
+    Success,
+    Failure
+  };
+
   struct SysLockGuard
   {
     SysLockGuard() {
