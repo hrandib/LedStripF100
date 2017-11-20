@@ -9,7 +9,7 @@ CppApplication
 
 	type: ["application", "printsize"]
 	consoleApplication: true
-  cpp.optimization: "none"
+  cpp.optimization: "small"
 	cpp.debugInformation: false
   cpp.enableExceptions: false
   cpp.enableRtti: false
@@ -255,6 +255,7 @@ CppApplication
 		]
 	}
   Group {	name: "Various"
+    condition: false
     prefix: ChibiOS + "os/various/"
     files: [
       "shell/shell.h",
