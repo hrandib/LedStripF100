@@ -98,84 +98,6 @@ namespace Wk {
     addrNode
   };
 
-  //Every module should implement the same interface
-  struct NullModule {
-    static constexpr uint8_t GetDeviceMask()
-    {
-      return DevNull;
-    }
-    static void Init() { }
-    static bool Process()
-    {
-      return false;
-    }
-    static void SaveState() { }
-    static void On() { }
-    static void Off() { }
-    static constexpr uint8_t GetDeviceFeatures(uint8_t)
-    {
-      return 0;
-    }
-    static void ToggleOnOff() { }
-  };
-
-  namespace _impl {
-
-    template<typename...>
-    struct DeviceFeaturesHelper;
-
-    template<typename First, typename... Rest>
-    struct DeviceFeaturesHelper<First, Rest...> {
-      static constexpr uint8_t Get(uint8_t deviceMask)
-      {
-        return First::GetDeviceMask() == deviceMask ? First::GetDeviceFeatures() :
-                                                      DeviceFeaturesHelper<Rest...>::Get(deviceMask);
-      }
-    };
-
-    template<>
-    struct DeviceFeaturesHelper<> {
-      static constexpr uint8_t Get(uint8_t)
-      {
-        return 0;
-      }
-    };
-
-    template<typename... Modules>
-    struct ModuleList {
-      static constexpr uint8_t GetDeviceMask()
-      {
-        return (NullModule::GetDeviceMask() | ... | Modules::GetDeviceMask());
-      }
-      static void Init()
-      {
-        (NullModule::Init(), ..., Modules::Init());
-      }
-      static void Process()
-      {
-        (NullModule::Process() || ... || Modules::Process());
-      }
-      static constexpr uint8_t GetDeviceFeatures(uint8_t deviceMask)
-      {
-        return DeviceFeaturesHelper<Modules...>::Get(deviceMask);
-      }
-      static void On()
-      {
-        (NullModule::On(), ..., Modules::On());
-      }
-      static void Off()
-      {
-        (NullModule::Off(), ..., Modules::Off());
-      }
-      static void ToggleOnOff()
-      {
-        (NullModule::ToggleOnOff(), ..., Modules::ToggleOnOff());
-      }
-    };
-  }
-
-  using _impl::ModuleList;
-
   class WakeBase
   {
   public:
@@ -225,6 +147,84 @@ namespace Wk {
 
     size_t FillTxBuf();
   };
+
+  //Every module should implement the same interface
+  struct NullModule {
+    static constexpr uint8_t GetDeviceMask()
+    {
+      return DevNull;
+    }
+    static void Init() { }
+    static bool Process(WakeBase::Packet&)
+    {
+      return false;
+    }
+    static void SaveState() { }
+    static void On() { }
+    static void Off() { }
+    static constexpr uint8_t GetDeviceFeatures(uint8_t)
+    {
+      return 0;
+    }
+    static void ToggleOnOff() { }
+  };
+
+  namespace _impl {
+
+    template<typename...>
+    struct DeviceFeaturesHelper;
+
+    template<typename First, typename... Rest>
+    struct DeviceFeaturesHelper<First, Rest...> {
+      static constexpr uint8_t Get(uint8_t deviceMask)
+      {
+        return First::GetDeviceMask() == deviceMask ? First::GetDeviceFeatures() :
+                                                      DeviceFeaturesHelper<Rest...>::Get(deviceMask);
+      }
+    };
+
+    template<>
+    struct DeviceFeaturesHelper<> {
+      static constexpr uint8_t Get(uint8_t)
+      {
+        return 0;
+      }
+    };
+
+    template<typename... Modules>
+    struct ModuleList {
+      static constexpr uint8_t GetDeviceMask()
+      {
+        return (NullModule::GetDeviceMask() | ... | Modules::GetDeviceMask());
+      }
+      static void Init()
+      {
+        (NullModule::Init(), ..., Modules::Init());
+      }
+      static bool Process(WakeBase::Packet& packet)
+      {
+        return (NullModule::Process(packet) || ... || Modules::Process(packet));
+      }
+      static constexpr uint8_t GetDeviceFeatures(uint8_t deviceMask)
+      {
+        return DeviceFeaturesHelper<Modules...>::Get(deviceMask);
+      }
+      static void On()
+      {
+        (NullModule::On(), ..., Modules::On());
+      }
+      static void Off()
+      {
+        (NullModule::Off(), ..., Modules::Off());
+      }
+      static void ToggleOnOff()
+      {
+        (NullModule::ToggleOnOff(), ..., Modules::ToggleOnOff());
+      }
+    };
+  }
+
+  using _impl::ModuleList;
 
   template<typename... Modules>
   class Wake : public WakeBase, public Rtos::BaseStaticThread<256>
@@ -355,8 +355,7 @@ namespace Wk {
           break;
         default:
           //Check if command not processed in modules
-          if(/*ModuleList_::Process()*/false) {
-//            processedMask = 0;
+          if(!ModuleList_::Process(packetData_)) {
             packetData_.buf[0] = Wk::ERR_NI;
             packetData_.payloadSize = 1;
           }
