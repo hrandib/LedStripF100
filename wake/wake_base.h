@@ -100,7 +100,7 @@ namespace Wk {
 
   //Every module should implement the same interface
   struct NullModule {
-    static uint8_t GetDeviceMask()
+    static constexpr uint8_t GetDeviceMask()
     {
       return DevNull;
     }
@@ -112,7 +112,7 @@ namespace Wk {
     static void SaveState() { }
     static void On() { }
     static void Off() { }
-    static uint8_t GetDeviceFeatures(uint8_t)
+    static constexpr uint8_t GetDeviceFeatures(uint8_t)
     {
       return 0;
     }
@@ -120,6 +120,27 @@ namespace Wk {
   };
 
   namespace _impl {
+
+    template<typename...>
+    struct DeviceFeaturesHelper;
+
+    template<typename First, typename... Rest>
+    struct DeviceFeaturesHelper<First, Rest...> {
+      static constexpr uint8_t Get(uint8_t deviceMask)
+      {
+        return First::GetDeviceMask() == deviceMask ? First::GetDeviceFeatures() :
+                                                      DeviceFeaturesHelper<Rest...>::Get(deviceMask);
+      }
+    };
+
+    template<>
+    struct DeviceFeaturesHelper<> {
+      static constexpr uint8_t Get(uint8_t)
+      {
+        return 0;
+      }
+    };
+
     template<typename... Modules>
     struct ModuleList {
       static constexpr uint8_t GetDeviceMask()
@@ -132,12 +153,11 @@ namespace Wk {
       }
       static void Process()
       {
-        (NullModule::Process(), ..., Modules::Process());
+        (NullModule::Process() || ... || Modules::Process());
       }
-      //TODO: Implement
-      static constexpr uint8_t GetDeviceFeatures(uint8_t/* deviceMask*/)
+      static constexpr uint8_t GetDeviceFeatures(uint8_t deviceMask)
       {
-        return 0;
+        return DeviceFeaturesHelper<Modules...>::Get(deviceMask);
       }
       static void On()
       {
@@ -153,9 +173,6 @@ namespace Wk {
       }
     };
   }
-
-//  template<typename... Modules>
-//  using ModuleList = _impl::ModuleList<NullModule, Modules...>;
 
   using _impl::ModuleList;
 
