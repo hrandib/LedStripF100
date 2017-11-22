@@ -42,7 +42,16 @@ static PWMConfig pwmcfg = {
   #endif
 };
 
-static Wk::Wake<> wake(UARTD1, 115200, GPIOA, 10);
+struct Module : Wk::NullModule {
+  static void On() {
+    pwmEnableChannel(&PWMD3, 2, 50);
+  }
+  static void Off() {
+    pwmEnableChannel(&PWMD3, 2, 0);
+  }
+};
+
+static Wk::Wake<Module> wake(UARTD1, 115200, GPIOA, 10);
 
 /*
  * Application entry point.
@@ -65,9 +74,9 @@ int main(void) {
   wake.Init();
 
   while (true) {
-    pwmEnableChannel(&PWMD3, 2, 10);
-    BaseThread::sleep(MS2ST(2200));
-    pwmEnableChannel(&PWMD3, 2, 0);
+//    pwmEnableChannel(&PWMD3, 2, 10);
+//    BaseThread::sleep(MS2ST(2200));
+//    pwmEnableChannel(&PWMD3, 2, 0);
     BaseThread::sleep(MS2ST(2100));
   }
 }
