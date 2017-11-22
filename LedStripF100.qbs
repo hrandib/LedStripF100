@@ -15,16 +15,18 @@ CppApplication
   cpp.enableRtti: false
   cpp.positionIndependentCode: false
 	cpp.cLanguageVersion: "c11"
-  cpp.cxxLanguageVersion: "gnu++14"
-//  cpp.cxxFlags: ["-std=gnu++14"]
+  cpp.cxxLanguageVersion: "gnu++1z"
 	cpp.executableSuffix: ".elf"
   cpp.defines: [
 		"_GLIBCXX_USE_C99",
     "_GLIBCXX_HAVE_BROKEN_VSWPRINTF",
     "SHELL_CONFIG_FILE",
     "STM32F100xB",
-    //ChibiOS repository qbs build workaround
-    "SYSCALLS_CPP_HPP_"
+
+    //TODO: Remove editor helpers
+    "TRUE=1",
+    "FALSE=0",
+    "HAL_USE_UART"
 	]
   cpp.driverFlags: [
 		"-mcpu=cortex-m3",
@@ -34,7 +36,7 @@ CppApplication
     //"-nostdlib", "-nodefaultlibs"
 	]
   cpp.commonCompilerFlags: [
-    "-flto=8",
+//    "-flto=8",
     "-fdata-sections",
     "-ffunction-sections",
 //		"-Wno-unused-function",
@@ -128,6 +130,22 @@ CppApplication
       "shellconf.h",
     ]
   }
+  Group { name: "Wake"
+    prefix: "wake/"
+    files: [
+      "wake_base.cpp",
+      "wake_base.h",
+      "crc8.h",
+      "crc8.cpp"
+    ]
+  }
+  Group { name: "Utils"
+    prefix: "utils/"
+    files: [
+      "ch_extended.h",
+    ]
+  }
+
   Group { name: "Port"
     prefix: ChibiOS + "os/common/ports/ARMCMx/"
     files: [
@@ -152,6 +170,7 @@ CppApplication
   }
   Group { name: "Drivers"
     prefix: ChibiOS + "os/hal/ports/STM32/"
+//TODO: Remove unnecessary
     files: [
       "LLD/DACv1/hal_dac_lld.h",
       "LLD/DACv1/hal_dac_lld.c",
@@ -166,6 +185,8 @@ CppApplication
       "LLD/TIMv1/hal_pwm_lld.c",
       "LLD/TIMv1/hal_st_lld.h",
       "LLD/TIMv1/hal_st_lld.c",
+      "LLD/USARTv1/hal_uart_lld.h",
+      "LLD/USARTv1/hal_uart_lld.c",
       "LLD/USARTv1/hal_serial_lld.h",
       "LLD/USARTv1/hal_serial_lld.c"
     ]
@@ -234,6 +255,7 @@ CppApplication
 		]
 	}
   Group {	name: "Various"
+    condition: false
     prefix: ChibiOS + "os/various/"
     files: [
       "shell/shell.h",
