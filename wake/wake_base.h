@@ -356,7 +356,7 @@ namespace Wk {
     {
       portDE_ = portDE;
       pinDE_ = pinDE;
-      uartd.customData = this;
+      uartd.customData = static_cast<WakeBase*>(this);
     }
     void Init()
     {
