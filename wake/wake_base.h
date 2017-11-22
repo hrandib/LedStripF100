@@ -162,7 +162,7 @@ namespace Wk {
     static void SaveState() { }
     static void On() { }
     static void Off() { }
-    static constexpr uint8_t GetDeviceFeatures(uint8_t)
+    static constexpr uint8_t GetDeviceFeatures()
     {
       return 0;
     }
