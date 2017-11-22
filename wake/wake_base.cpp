@@ -30,8 +30,11 @@ namespace Wk {
    * This callback is invoked on a receive error, the errors mask is passed
    * as parameter.
    */
-  void WakeBase::RXerr(UARTDriver*, uartflags_t)
-  {  }
+  void WakeBase::RXerr(UARTDriver* uartp, uartflags_t)
+  {
+    WakeBase& wake = *reinterpret_cast<WakeBase*>(uartp->customData);
+    wake.state_ = WAIT_FEND;
+  }
 
   /*
    * This callback is invoked when a receive buffer has been completely written.
