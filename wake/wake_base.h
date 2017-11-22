@@ -255,6 +255,14 @@ namespace Wk {
 
     void ProcessDefault(Cmd cmd)
     {
+      auto NotImplemented = [&] {
+        packetData_.payloadSize = 1;
+        packetData_.buf[0] = ERR_NI;
+      };
+      auto ParameterError = [&] {
+        packetData_.payloadSize = 1;
+        packetData_.buf[0] = ERR_PA;
+      };
       if(cmd) {
         switch(cmd) {
         case C_NOP:
@@ -268,7 +276,7 @@ namespace Wk {
           //Common device info
           if(!packetData_.payloadSize) {
             packetData_.buf[0] = ERR_NO;
-            packetData_.buf[1] = 0;//moduleList::deviceMask;
+            packetData_.buf[1] = ModuleList_::GetDeviceMask();
             packetData_.buf[2] = INSTRUCTION_SET_VER_MAJOR << 4 | INSTRUCTION_SET_VER_MINOR;
             packetData_.payloadSize = 3;
           }
@@ -284,80 +292,60 @@ namespace Wk {
               }
               //device not available
               else {
-                packetData_.buf[0] = ERR_NI;
+                NotImplemented();
               }
             }
             //else if(packetData.buf[0] == 7) //custom device
           }
           else {
-            packetData_.buf[0] = ERR_PA;
-            packetData_.payloadSize = 1;
+            ParameterError();
           }
           break;
         case C_SETNODEADDRESS:
-          packetData_.payloadSize = 1;
-          packetData_.buf[0] = ERR_NI;
-          //SetAddress(addrNode);
+          NotImplemented();
           break;
         case C_SETGROUPADDRESS:
-//          if(!packetData_.n) {
-//            packetData.n = 2;
-//            packetData.buf[0] = ERR_NO;
-//            packetData.buf[1] = groupAddr_nv;
-//          }
-//          else {
-//            SetAddress(addrGroup);
-//          }
-          packetData_.payloadSize = 1;
-          packetData_.buf[0] = ERR_NI;
+          NotImplemented();
           break;
         case C_GETOPTIME:
-          packetData_.payloadSize = 1;
-          packetData_.buf[0] = ERR_NI;
+          NotImplemented();
           break;
         case C_OFF:
           if(!packetData_.payloadSize) {
             packetData_.buf[0] = Wk::ERR_NO;
             ModuleList_::Off();
+            packetData_.payloadSize = 1;
           }
           else {
-            packetData_.buf[0] = Wk::ERR_PA;
+            ParameterError();
           }
-          packetData_.payloadSize = 1;
           break;
         case C_ON:
           if(!packetData_.payloadSize) {
             packetData_.buf[0] = Wk::ERR_NO;
             ModuleList_::On();
+            packetData_.payloadSize = 1;
           }
           else {
-            packetData_.buf[0] = Wk::ERR_PA;
+            ParameterError();
           }
-          packetData_.payloadSize = 1;
           break;
         case C_ToggleOnOff:
           if(!packetData_.payloadSize) {
             packetData_.buf[0] = Wk::ERR_NO;
             ModuleList_::ToggleOnOff();
+            packetData_.payloadSize = 1;
           }
           else {
-            packetData_.buf[0] = Wk::ERR_PA;
+            ParameterError();
           }
-          packetData_.payloadSize = 1;
           break;
         case C_SAVESETTINGS:
-//          if(!packetData_.n) {
-//            packetData_.buf[0] = ERR_NO;
-//            ModuleList_::SaveState();
-//          }
-//          else packetData_.buf[0] = ERR_PA;
-//          packetData_.n = 1;
+          NotImplemented();
           break;
         default:
-          //Check if command not processed in modules
           if(!ModuleList_::Process(packetData_)) {
-            packetData_.buf[0] = Wk::ERR_NI;
-            packetData_.payloadSize = 1;
+            NotImplemented();
           }
         } //Switch
       }
@@ -374,6 +362,7 @@ namespace Wk {
     {
       palSetPadMode(portDE_, pinDE_, PAL_MODE_OUTPUT_PUSHPULL);
       palClearPad(portDE_, pinDE_);
+      ModuleList_::Init();
       uartStart(uartd_, &conf_);
       start(NORMALPRIO - 1);
     }
