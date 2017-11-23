@@ -32,13 +32,25 @@ namespace Wk {
 
 struct LedDriverFeatures
 {
+  enum Features {
+    NoFeatures,
+    FanControl = 1U << 1,
+    TwoChannels = 1U << 0
+  };
   static const PWMConfig pwmcfg;
   static PWMDriver* const PWMD;
   static const uint8_t LUT[MAX_BRIGHTNESS_VALUE + 1];
 
   static const ioportid_t pwmPort;
   static const uint16_t pwmPad;
+
+  static constexpr Features features{ NoFeatures };
 };
+
+constexpr LedDriverFeatures::Features operator|(LedDriverFeatures::Features f1, LedDriverFeatures::Features f2)
+{
+  return static_cast<LedDriverFeatures::Features>(uint32_t(f1) | uint32_t(f2));
+}
 
 template<typename Features = LedDriverFeatures>
 class LedDriver : public Wk::NullModule {
@@ -100,6 +112,10 @@ public:
   static uint8_t GetDeviceMask()
   {
     return Wk::DevLedDriver;
+  }
+  static uint8_t GetDeviceFeatures()
+  {
+    return Features::features;
   }
   static void On()
   {
