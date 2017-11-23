@@ -373,6 +373,9 @@ namespace Wk {
     {
       while(true) {
         msg_t msg = stayPoint_.Suspend();
+        if(msg == MSG_OK || msg == MSG_RESET || msg == MSG_TIMEOUT) {
+          continue;
+        }
         ProcessDefault((Cmd)msg);
         if(IsNotBroadcast()) {
           SetDE(uartd_);
