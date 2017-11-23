@@ -133,10 +133,12 @@ CppApplication
   Group { name: "Wake"
     prefix: "wake/"
     files: [
+      "led_driver.h",
+      "led_driver_strip.cpp",
       "wake_base.cpp",
       "wake_base.h",
       "crc8.h",
-      "crc8.cpp"
+      "crc8.cpp",
     ]
   }
   Group { name: "Utils"

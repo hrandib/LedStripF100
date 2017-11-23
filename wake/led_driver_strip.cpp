@@ -20,42 +20,32 @@
  * SOFTWARE.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <cstdlib>
-
-#include "ch_extended.h"
-#include "hal.h"
-#include "chprintf.h"
-
-#include "wake_base.h"
 #include "led_driver.h"
 
-using namespace Rtos;
+namespace Wk {
 
-static Wk::Wake<Wk::LedDriver<>> wake(UARTD1, 115200, GPIOA, 10);
+const PWMConfig LedDriverFeatures::pwmcfg {
+  4000000UL,                                    /* 4MHz PWM clock frequency.   */
+  4096,                                         /* Initial PWM period 1ms.      */
+  nullptr,
+  {
+    {PWM_OUTPUT_DISABLED, nullptr},
+    {PWM_OUTPUT_DISABLED, nullptr},
+    {PWM_OUTPUT_ACTIVE_HIGH, nullptr},
+    {PWM_OUTPUT_DISABLED, nullptr}
+  },
+  0,
+  0,
+  #if STM32_PWM_USE_ADVANCED
+  0
+  #endif
+};
 
-/*
- * Application entry point.
- */
-int main(void) {
+PWMDriver* const LedDriverFeatures::PWMD{ &PWMD3 };
 
-  /*
-   * System initializations.
-   * - HAL initialization, this also initializes the configured device drivers
-   *   and performs the board-specific initializations.
-   * - Kernel initialization, the main() function becomes a thread and the
-   *   RTOS is active.
-   */
-  halInit();
-  System::init();
+const uint8_t LedDriverFeatures::LUT[] = {0};
 
-  wake.Init();
+const ioportid_t LedDriverFeatures::pwmPort{ GPIOB };
+const uint16_t LedDriverFeatures::pwmPad{ 0 };
 
-  while (true) {
-//    pwmEnableChannel(&PWMD3, 2, 10);
-//    BaseThread::sleep(MS2ST(2200));
-//    pwmEnableChannel(&PWMD3, 2, 0);
-    BaseThread::sleep(MS2ST(2100));
-  }
-}
+} //Wk
