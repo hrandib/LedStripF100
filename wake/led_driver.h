@@ -39,7 +39,7 @@ struct LedDriverFeatures
   };
   static const PWMConfig pwmcfg;
   static PWMDriver* const PWMD;
-  static const uint8_t LUT[MAX_BRIGHTNESS_VALUE + 1];
+  static const uint16_t LUT[MAX_BRIGHTNESS_VALUE + 1];
 
   static const ioportid_t pwmPort;
   static const uint16_t pwmPad;
