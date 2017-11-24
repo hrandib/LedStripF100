@@ -33,7 +33,45 @@
 
 using namespace Rtos;
 
-static Wk::Wake<Wk::LedDriver<>> wake(UARTD1, 115200, GPIOA, 10);
+using LedDriver = Wk::LedDriver<>;
+
+static Wk::Wake<LedDriver> wake(UARTD1, 115200, GPIOA, 10);
+
+class ButtonControl {
+private:
+  ioportid_t buttonPort_;
+  uint16_t buttonPin_;
+  uint8_t direction{};
+  uint8_t count{};
+public:
+  ButtonControl(ioportid_t port, uint16_t pin) : buttonPort_{port}, buttonPin_{pin}
+  {
+    palSetPadMode(port, pin, PAL_MODE_INPUT_PULLDOWN);
+  }
+  void Update()
+  {
+    if(palReadPad(buttonPort_, buttonPin_)) {
+      ++count;
+      if(count > 15 && count & 0x01) {
+        if(!direction) {
+          LedDriver::Increment(1);
+        }
+        else {
+          LedDriver::Decrement(1);
+        }
+      }
+    }
+    else if(count) {
+      if(count >= 2 && count <= 15) {
+        LedDriver::ToggleOnOff();
+      }
+      else {
+        direction ^= 1;
+      }
+      count = 0;
+    }
+  }
+};
 
 /*
  * Application entry point.
@@ -51,11 +89,9 @@ int main(void) {
   System::init();
 
   wake.Init();
-
+  ButtonControl buttonControl{GPIOB, 10};
   while (true) {
-//    pwmEnableChannel(&PWMD3, 2, 10);
-//    BaseThread::sleep(MS2ST(2200));
-//    pwmEnableChannel(&PWMD3, 2, 0);
-    BaseThread::sleep(MS2ST(2100));
+    buttonControl.Update();
+    BaseThread::sleep(MS2ST(16));
   }
 }
