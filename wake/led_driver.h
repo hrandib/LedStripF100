@@ -87,7 +87,7 @@ private:
     pwmEnableChannelI(Features::PWMD, 2, Features::LUT[currentValue_]);
     chVTSetI(&changeVt_, MS2ST(BRIGHTNESS_CHANGE_STEP_TIME), changeCb, arg);
   }
-
+public:
   static void Set(uint8_t val) {
     if(val > MAX_BRIGHTNESS_VALUE) {
       val = MAX_BRIGHTNESS_VALUE;
@@ -122,7 +122,7 @@ private:
     Set(val);
     return val;
   }
-public:
+
   static void Init()
   {
     palSetPadMode(Features::pwmPort, Features::pwmPad, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
