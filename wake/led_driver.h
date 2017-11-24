@@ -29,7 +29,7 @@
 namespace Wk {
 
   static constexpr uint8_t MAX_BRIGHTNESS_VALUE = 100;
-  static constexpr uint8_t BRIGHTNESS_CHANGE_STEP_TIME = 30;
+  static constexpr uint8_t BRIGHTNESS_CHANGE_STEP_TIME = 25;
 
 struct LedDriverFeatures
 {
@@ -70,6 +70,7 @@ private:
 
   static virtual_timer_t changeVt_;
   static uint8_t currentValue_;
+  static uint8_t previousValue_;
 
   static void ChangeCb(void* arg)
   {
@@ -88,22 +89,22 @@ private:
     chVTSetI(&changeVt_, MS2ST(BRIGHTNESS_CHANGE_STEP_TIME), ChangeCb, arg);
   }
 public:
-  static void Set(uint8_t val) {
+  static void SetBrightness(uint8_t val) {
     if(val > MAX_BRIGHTNESS_VALUE) {
       val = MAX_BRIGHTNESS_VALUE;
     }
     chVTSet(&changeVt_, MS2ST(BRIGHTNESS_CHANGE_STEP_TIME), ChangeCb, (void*)(uint32_t)val);
   }
-  static uint8_t Get() {
+  static uint8_t GetBrightness() {
     return currentValue_;
   }
 
   static uint8_t Increment(uint8_t step)
   {
-    uint8_t val = Get();
+    uint8_t val = GetBrightness();
     if(val < MAX_BRIGHTNESS_VALUE) {
       val += step;
-      Set(val);
+      SetBrightness(val);
     }
     else {
       val = MAX_BRIGHTNESS_VALUE;
@@ -112,14 +113,14 @@ public:
   }
   static uint8_t Decrement(uint8_t step)
   {
-    uint8_t val = Get();
+    uint8_t val = GetBrightness();
     if(val <= step) {
       val = 0;
     }
     else {
       val -= step;
     }
-    Set(val);
+    SetBrightness(val);
     return val;
   }
 
@@ -139,15 +140,19 @@ public:
   }
   static void On()
   {
-    Set(50);
+    SetBrightness(previousValue_);
   }
   static void Off()
   {
-    Set(0);
+    if(!GetBrightness()) {
+      return;
+    }
+    previousValue_ = GetBrightness();
+    SetBrightness(0);
   }
   static void ToggleOnOff()
   {
-    (Get() ? Off : On)();
+    (GetBrightness() ? Off : On)();
   }
   static bool Process(Wk::WakeBase::Packet& packet)
   {
@@ -155,7 +160,7 @@ public:
     case C_GetState:
       if(!packet.payloadSize) {
         packet.buf[0] = Wk::ERR_NO;
-        packet.buf[1] = Get();
+        packet.buf[1] = GetBrightness();
         packet.payloadSize = 2;
       }
       else {
@@ -164,7 +169,7 @@ public:
       break;
     case C_SetBright:
       if(packet.payloadSize == 1) {
-        Set(packet.buf[0]);
+        SetBrightness(packet.buf[0]);
         packet.buf[0] = Wk::ERR_NO;
       }
       else {
@@ -202,6 +207,8 @@ public:
 
 template<typename Features>
 uint8_t LedDriver<Features>::currentValue_;
+template<typename Features>
+uint8_t LedDriver<Features>::previousValue_;
 template<typename Features>
 virtual_timer_t LedDriver<Features>::changeVt_;
 
