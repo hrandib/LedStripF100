@@ -71,7 +71,7 @@ private:
   static virtual_timer_t changeVt_;
   static uint8_t currentValue_;
 
-  static void changeCb(void* arg)
+  static void ChangeCb(void* arg)
   {
     const uint32_t newValue = reinterpret_cast<uint32_t>(arg);
     if(currentValue_ < newValue) {
@@ -85,14 +85,14 @@ private:
     }
     Rtos::SysLockGuardFromISR lock;
     pwmEnableChannelI(Features::PWMD, 2, Features::LUT[currentValue_]);
-    chVTSetI(&changeVt_, MS2ST(BRIGHTNESS_CHANGE_STEP_TIME), changeCb, arg);
+    chVTSetI(&changeVt_, MS2ST(BRIGHTNESS_CHANGE_STEP_TIME), ChangeCb, arg);
   }
 public:
   static void Set(uint8_t val) {
     if(val > MAX_BRIGHTNESS_VALUE) {
       val = MAX_BRIGHTNESS_VALUE;
     }
-    chVTSet(&changeVt_, MS2ST(BRIGHTNESS_CHANGE_STEP_TIME), changeCb, (void*)(uint32_t)val);
+    chVTSet(&changeVt_, MS2ST(BRIGHTNESS_CHANGE_STEP_TIME), ChangeCb, (void*)(uint32_t)val);
   }
   static uint8_t Get() {
     return currentValue_;
