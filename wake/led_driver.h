@@ -29,6 +29,7 @@
 namespace Wk {
 
   static constexpr uint8_t MAX_BRIGHTNESS_VALUE = 100;
+  static constexpr uint8_t BRIGHTNESS_CHANGE_STEP_TIME = 30;
 
 struct LedDriverFeatures
 {
@@ -53,7 +54,8 @@ constexpr LedDriverFeatures::Features operator|(LedDriverFeatures::Features f1, 
 }
 
 template<typename Features = LedDriverFeatures>
-class LedDriver : public Wk::NullModule {
+class LedDriver : public Wk::NullModule
+{
 private:
   enum InstructionSet {
       C_GetState = 16,
@@ -66,17 +68,34 @@ private:
       C_SetGfgFanAuto = 21
   };
 
-  static uint8_t value_;
+  static virtual_timer_t changeVt_;
+  static uint8_t currentValue_;
+
+  static void changeCb(void* arg)
+  {
+    const uint32_t newValue = reinterpret_cast<uint32_t>(arg);
+    if(currentValue_ < newValue) {
+      ++currentValue_;
+    }
+    else if(currentValue_ > newValue) {
+      --currentValue_;
+    }
+    else {
+      return;
+    }
+    Rtos::SysLockGuardFromISR lock;
+    pwmEnableChannelI(Features::PWMD, 2, Features::LUT[currentValue_]);
+    chVTSetI(&changeVt_, MS2ST(BRIGHTNESS_CHANGE_STEP_TIME), changeCb, arg);
+  }
 
   static void Set(uint8_t val) {
     if(val > MAX_BRIGHTNESS_VALUE) {
       val = MAX_BRIGHTNESS_VALUE;
     }
-    value_ = val;
-    pwmEnableChannel(Features::PWMD, 2, Features::LUT[val]);
+    chVTSet(&changeVt_, MS2ST(BRIGHTNESS_CHANGE_STEP_TIME), changeCb, (void*)(uint32_t)val);
   }
   static uint8_t Get() {
-    return value_;
+    return currentValue_;
   }
 
   static uint8_t Increment(uint8_t step)
@@ -108,6 +127,7 @@ public:
   {
     palSetPadMode(Features::pwmPort, Features::pwmPad, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
     pwmStart(Features::PWMD, &Features::pwmcfg);
+    chVTObjectInit(&changeVt_);
   }
   static uint8_t GetDeviceMask()
   {
@@ -181,7 +201,9 @@ public:
 };
 
 template<typename Features>
-uint8_t LedDriver<Features>::value_;
+uint8_t LedDriver<Features>::currentValue_;
+template<typename Features>
+virtual_timer_t LedDriver<Features>::changeVt_;
 
 } //Wk
 
