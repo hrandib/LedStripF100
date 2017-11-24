@@ -39,6 +39,12 @@ static Wk::Wake<LedDriver> wake(UARTD1, 115200, GPIOA, 10);
 
 class ButtonControl {
 private:
+  enum {
+    BLIND_TIMESLOT = 2,
+    SHORTPRESS_TIMESLOT = 15,
+    UPDATE_PERIOD_MS = 40
+  };
+
   ioportid_t buttonPort_;
   uint16_t buttonPin_;
   uint8_t direction{};
@@ -52,7 +58,7 @@ public:
   {
     if(palReadPad(buttonPort_, buttonPin_)) {
       ++count;
-      if(count > 15 && count & 0x01) {
+      if(count > SHORTPRESS_TIMESLOT) {
         if(!direction) {
           LedDriver::Increment(1);
         }
@@ -62,7 +68,7 @@ public:
       }
     }
     else if(count) {
-      if(count >= 2 && count <= 15) {
+      if(count >= BLIND_TIMESLOT && count <= SHORTPRESS_TIMESLOT) {
         LedDriver::ToggleOnOff();
       }
       else {
@@ -70,6 +76,10 @@ public:
       }
       count = 0;
     }
+  }
+  constexpr static systime_t GetUpdatePeriod()
+  {
+    return MS2ST(UPDATE_PERIOD_MS);
   }
 };
 
@@ -92,6 +102,6 @@ int main(void) {
   ButtonControl buttonControl{GPIOB, 10};
   while (true) {
     buttonControl.Update();
-    BaseThread::sleep(MS2ST(16));
+    BaseThread::sleep(buttonControl.GetUpdatePeriod());
   }
 }
