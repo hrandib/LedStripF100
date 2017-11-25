@@ -29,6 +29,7 @@
 namespace Wk {
 
   static constexpr uint8_t MAX_BRIGHTNESS_VALUE = 100;
+  static constexpr uint8_t DEFAULT_BRIGHTNESS = 50;
   static constexpr uint8_t BRIGHTNESS_CHANGE_STEP_TIME = 25;
 
 struct LedDriverFeatures
@@ -208,7 +209,7 @@ public:
 template<typename Features>
 uint8_t LedDriver<Features>::currentValue_;
 template<typename Features>
-uint8_t LedDriver<Features>::previousValue_;
+uint8_t LedDriver<Features>::previousValue_ = DEFAULT_BRIGHTNESS;
 template<typename Features>
 virtual_timer_t LedDriver<Features>::changeVt_;
 
