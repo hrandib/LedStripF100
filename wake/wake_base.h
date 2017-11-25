@@ -107,6 +107,16 @@ namespace Wk {
       uint8_t cmd;
       uint8_t payloadSize;
       uint8_t buf[WAKEDATABUFSIZE];
+      void NotImplemented()
+      {
+        payloadSize = 1;
+        buf[0] = ERR_NI;
+      }
+      void ParameterError()
+      {
+        payloadSize = 1;
+        buf[0] = ERR_PA;
+      }
     };
   protected:
     static void RXerr(UARTDriver* uartp, uartflags_t e);
@@ -255,14 +265,6 @@ namespace Wk {
 
     void ProcessDefault(Cmd cmd)
     {
-      auto NotImplemented = [&] {
-        packetData_.payloadSize = 1;
-        packetData_.buf[0] = ERR_NI;
-      };
-      auto ParameterError = [&] {
-        packetData_.payloadSize = 1;
-        packetData_.buf[0] = ERR_PA;
-      };
       if(cmd) {
         switch(cmd) {
         case C_NOP:
@@ -292,23 +294,23 @@ namespace Wk {
               }
               //device not available
               else {
-                NotImplemented();
+                packetData_.NotImplemented();
               }
             }
             //else if(packetData.buf[0] == 7) //custom device
           }
           else {
-            ParameterError();
+            packetData_.ParameterError();
           }
           break;
         case C_SETNODEADDRESS:
-          NotImplemented();
+          packetData_.NotImplemented();
           break;
         case C_SETGROUPADDRESS:
-          NotImplemented();
+          packetData_.NotImplemented();
           break;
         case C_GETOPTIME:
-          NotImplemented();
+          packetData_.NotImplemented();
           break;
         case C_OFF:
           if(!packetData_.payloadSize) {
@@ -317,7 +319,7 @@ namespace Wk {
             packetData_.payloadSize = 1;
           }
           else {
-            ParameterError();
+            packetData_.ParameterError();
           }
           break;
         case C_ON:
@@ -327,7 +329,7 @@ namespace Wk {
             packetData_.payloadSize = 1;
           }
           else {
-            ParameterError();
+            packetData_.ParameterError();
           }
           break;
         case C_ToggleOnOff:
@@ -337,15 +339,15 @@ namespace Wk {
             packetData_.payloadSize = 1;
           }
           else {
-            ParameterError();
+            packetData_.ParameterError();
           }
           break;
         case C_SAVESETTINGS:
-          NotImplemented();
+          packetData_.NotImplemented();
           break;
         default:
           if(!ModuleList_::Process(packetData_)) {
-            NotImplemented();
+            packetData_.NotImplemented();
           }
         } //Switch
       }
@@ -371,6 +373,9 @@ namespace Wk {
     {
       while(true) {
         msg_t msg = stayPoint_.Suspend();
+        if(msg == MSG_OK || msg == MSG_RESET || msg == MSG_TIMEOUT) {
+          continue;
+        }
         ProcessDefault((Cmd)msg);
         if(IsNotBroadcast()) {
           SetDE(uartd_);

@@ -1,18 +1,24 @@
 /*
-    ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
+ * Copyright (c) 2017 Dmytro Shestakov
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -21,37 +27,61 @@
 #include "ch_extended.h"
 #include "hal.h"
 #include "chprintf.h"
+
 #include "wake_base.h"
+#include "led_driver.h"
 
 using namespace Rtos;
 
-static PWMConfig pwmcfg = {
-  4000000UL,                                    /* 10kHz PWM clock frequency.   */
-  4096,                                         /* Initial PWM period 1ms.      */
-  nullptr,
+using LedDriver = Wk::LedDriver<>;
+
+static Wk::Wake<LedDriver> wake(UARTD1, 115200, GPIOA, 10);
+
+class ButtonControl {
+private:
+  enum {
+    BLIND_TIMESLOT = 2,
+    SHORTPRESS_TIMESLOT = 15,
+    UPDATE_PERIOD_MS = 40
+  };
+
+  ioportid_t buttonPort_;
+  uint16_t buttonPin_;
+  uint8_t direction{};
+  uint8_t count{};
+public:
+  ButtonControl(ioportid_t port, uint16_t pin) : buttonPort_{port}, buttonPin_{pin}
   {
-    {PWM_OUTPUT_DISABLED, nullptr},
-    {PWM_OUTPUT_DISABLED, nullptr},
-    {PWM_OUTPUT_ACTIVE_HIGH, nullptr},
-    {PWM_OUTPUT_DISABLED, nullptr}
-  },
-  0,
-  0,
-  #if STM32_PWM_USE_ADVANCED
-  0
-  #endif
-};
-
-struct Module : Wk::NullModule {
-  static void On() {
-    pwmEnableChannel(&PWMD3, 2, 50);
+    palSetPadMode(port, pin, PAL_MODE_INPUT_PULLDOWN);
   }
-  static void Off() {
-    pwmEnableChannel(&PWMD3, 2, 0);
+  void Update()
+  {
+    if(palReadPad(buttonPort_, buttonPin_)) {
+      ++count;
+      if(count > SHORTPRESS_TIMESLOT) {
+        if(!direction) {
+          LedDriver::Increment(1);
+        }
+        else {
+          LedDriver::Decrement(1);
+        }
+      }
+    }
+    else if(count) {
+      if(count >= BLIND_TIMESLOT && count <= SHORTPRESS_TIMESLOT) {
+        LedDriver::ToggleOnOff();
+      }
+      else {
+        direction ^= 1;
+      }
+      count = 0;
+    }
+  }
+  constexpr static systime_t GetUpdatePeriod()
+  {
+    return MS2ST(UPDATE_PERIOD_MS);
   }
 };
-
-static Wk::Wake<Module> wake(UARTD1, 115200, GPIOA, 10);
 
 /*
  * Application entry point.
@@ -68,15 +98,10 @@ int main(void) {
   halInit();
   System::init();
 
-
-  palSetPadMode(GPIOB, 0, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
-  pwmStart(&PWMD3, &pwmcfg);
   wake.Init();
-
+  ButtonControl buttonControl{GPIOB, 10};
   while (true) {
-//    pwmEnableChannel(&PWMD3, 2, 10);
-//    BaseThread::sleep(MS2ST(2200));
-//    pwmEnableChannel(&PWMD3, 2, 0);
-    BaseThread::sleep(MS2ST(2100));
+    buttonControl.Update();
+    BaseThread::sleep(buttonControl.GetUpdatePeriod());
   }
 }
