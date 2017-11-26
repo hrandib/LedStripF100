@@ -177,6 +177,7 @@ CppApplication
   Group { name: "Drivers"
     prefix: "drivers/"
     files: [
+      "i2c_adapter.h",
       "ssd1306.h"
     ]
   }

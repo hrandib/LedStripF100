@@ -23,7 +23,7 @@
 #ifndef SSD1306_H
 #define SSD1306_H
 
-#include "i2c.h"
+#include "i2c_adapter.h"
 #include "fonts.h"
 #include "string_utils.h"
 
