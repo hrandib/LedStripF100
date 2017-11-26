@@ -23,7 +23,7 @@
 #include "stdint.h"
 #include <stddef.h>
 
-namespace stdx
+namespace Utils
 {
 	template<uint32_t val>
 	struct Int2Type
@@ -116,13 +116,13 @@ namespace stdx
 
 	#pragma inline=forced
 	template<typename T>
-	typename stdx::enable_if<!stdx::is_signed<T>::value, bool>::type is_negative(T)
+    typename Utils::enable_if<!Utils::is_signed<T>::value, bool>::type is_negative(T)
 	{
 		return false;
 	}
 	#pragma inline=forced
 	template<typename T>
-	typename stdx::enable_if<stdx::is_signed<T>::value, bool>::type is_negative(T value)
+    typename Utils::enable_if<Utils::is_signed<T>::value, bool>::type is_negative(T value)
 	{
 		return value < 0;
 	}

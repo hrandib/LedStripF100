@@ -30,10 +30,10 @@ namespace io
 	template<typename T>
 	const uint8_t* xtoa(T value, uint8_t* result, uint8_t base = 10)
 	{
-		typedef typename stdx::make_unsigned<T>::type UT;
+        typedef typename Utils::make_unsigned<T>::type UT;
 		uint8_t* out = result;
 		UT quotient;
-		if(stdx::is_signed<T>::value) quotient = stdx::is_negative(value) ? -value : value;
+        if(Utils::is_signed<T>::value) quotient = Utils::is_negative(value) ? -value : value;
 		else quotient = value;
 	// check that the base if valid
 	//	if (base < 2 || base > 36) { *result = '\0'; return NULL; }
@@ -43,7 +43,7 @@ namespace io
 			quotient = q;
 			*out++ = (rem < 10 ? '0' : 'a' - 10) + rem;
 		} while ( quotient );
-		if(stdx::is_signed<T>::value && stdx::is_negative(value)) *out++ = '-';
+        if(Utils::is_signed<T>::value && Utils::is_negative(value)) *out++ = '-';
 		*out-- = '\0';
 	//reverse string
 		uint8_t tmp_char;
@@ -65,14 +65,14 @@ namespace io
 	template<typename T>
 	inline static const uint8_t* utoa(T value, uint8_t* result, uint8_t base = 10)
 	{
-		static_assert(!stdx::is_signed<T>::value, "utoa called with signed arg");
+        static_assert(!Utils::is_signed<T>::value, "utoa called with signed arg");
 		return xtoa(value, result, base);
 	}
 	#pragma inline=forced
 	template<typename T>
 	inline static const uint8_t* itoa(T value, uint8_t* result, uint8_t base = 10)
 	{
-		static_assert(stdx::is_signed<T>::value, "itoa called with unsigned arg");
+        static_assert(Utils::is_signed<T>::value, "itoa called with unsigned arg");
 		return xtoa(value, result, base);
 	}
 
