@@ -33,10 +33,10 @@ namespace io {
     uint8_t* out = result;
     UT quotient;
     if(Utils::is_signed<T>::value) {
-      quotient = Utils::is_negative(value) ? -value : value;
+      quotient = static_cast<UT>(Utils::is_negative(value) ? -value : value);
     }
     else {
-      quotient = value;
+      quotient = static_cast<UT>(value);
     }
     // check that the base if valid
     //  if (base < 2 || base > 36) { *result = '\0'; return NULL; }
@@ -44,7 +44,7 @@ namespace io {
       const UT q = quotient / base;
       const UT rem = quotient - q * base;
       quotient = q;
-      *out++ = (rem < 10 ? '0' : 'a' - 10) + rem;
+      *out++ = static_cast<uint8_t>((rem < 10 ? '0' : 'a' - 10) + rem);
     } while(quotient);
     if(Utils::is_signed<T>::value && Utils::is_negative(value)) {
       *out++ = '-';

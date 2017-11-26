@@ -28,7 +28,7 @@ namespace io {
   {
     size_t len = strlen((const char*)utoa16(value, buf));
     if(len <= position) {
-      const uint8_t offset = position + 2 - len;
+      uint8_t offset = static_cast<uint8_t>(position + 2 - len);
       memmove(buf + offset, buf, len + 1);
       buf[0] = '0';
       buf[1] = '.';
