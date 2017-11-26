@@ -178,7 +178,8 @@ CppApplication
   Group { name: "Drivers"
     prefix: "drivers/"
     files: [
-      "i2c_adapter.h",
+      "gpio.h",
+      "i2c_fallback.h",
       "ssd1306.h"
     ]
   }
