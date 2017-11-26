@@ -277,6 +277,13 @@ CppApplication
       "streams/nullstreams.c"
     ]
   }
+  Group { name: "Resources"
+    prefix: "resources/"
+    files: [
+      "fonts.h",
+      "fonts.cpp",
+    ]
+  }
   Group { name: "Test"
     condition: false
     prefix: ChibiOS + "test/"
