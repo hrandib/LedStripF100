@@ -61,14 +61,12 @@ namespace io
 		return val ? "True" : "False";
 	}
 
-	#pragma inline=forced
 	template<typename T>
 	inline static const uint8_t* utoa(T value, uint8_t* result, uint8_t base = 10)
 	{
         static_assert(!Utils::is_signed<T>::value, "utoa called with signed arg");
 		return xtoa(value, result, base);
 	}
-	#pragma inline=forced
 	template<typename T>
 	inline static const uint8_t* itoa(T value, uint8_t* result, uint8_t base = 10)
 	{
@@ -76,33 +74,27 @@ namespace io
 		return xtoa(value, result, base);
 	}
 
-	#pragma inline=forced
 	inline static const uint8_t* utoa8(uint8_t value, uint8_t* result, uint8_t base = 10)
 	{
 		return utoa(value, result, base);
 	}
-	#pragma inline=forced
 	inline static const uint8_t* utoa16(uint16_t value, uint8_t* result, uint8_t base = 10)
 	{
 		return utoa(value, result, base);
 	}
-	#pragma inline=forced
 	inline static const uint8_t* utoa32(uint32_t value, uint8_t* result, uint8_t base = 10)
 	{
 		return utoa(value, result, base);
 	}
 
-	#pragma inline=forced
 	inline static const uint8_t* itoa8(int8_t value, uint8_t* result, uint8_t base = 10)
 	{
 		return itoa(value, result, base);
 	}
-	#pragma inline=forced
 	inline static const uint8_t* itoa16(int16_t value, uint8_t* result, uint8_t base = 10)
 	{
 		return itoa(value, result, base);
 	}
-	#pragma inline=forced
 	inline static const uint8_t* itoa32(int32_t value, uint8_t* result, uint8_t base = 10)
 	{
 		return itoa(value, result, base);

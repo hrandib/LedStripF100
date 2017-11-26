@@ -114,13 +114,11 @@ namespace Utils
 	struct enable_if<true, T> { typedef T type; };
 
 
-	#pragma inline=forced
 	template<typename T>
     typename Utils::enable_if<!Utils::is_signed<T>::value, bool>::type is_negative(T)
 	{
 		return false;
 	}
-	#pragma inline=forced
 	template<typename T>
     typename Utils::enable_if<Utils::is_signed<T>::value, bool>::type is_negative(T value)
 	{
