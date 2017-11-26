@@ -58,6 +58,7 @@ CppApplication
     "board",
     "utils",
     "wake",
+    "resources",
     //Startup
     ChibiOS + "os/common/startup/ARMCMx/compilers/GCC",
     ChibiOS + "os/common/startup/ARMCMx/devices/STM32F1xx",
@@ -145,6 +146,9 @@ CppApplication
     prefix: "utils/"
     files: [
       "ch_extended.h",
+      "string_utils.h",
+      "string_utils.cpp",
+      "type_traits_ex.h"
     ]
   }
 
@@ -171,6 +175,12 @@ CppApplication
     ]
   }
   Group { name: "Drivers"
+    prefix: "drivers/"
+    files: [
+      "ssd1306.h"
+    ]
+  }
+  Group { name: "Drivers ChibiOS"
     prefix: ChibiOS + "os/hal/ports/STM32/"
 //TODO: Remove unnecessary
     files: [
@@ -319,8 +329,7 @@ CppApplication
       "rt/source/test/test_sequence_013.c",
     ]
   }
-	Rule
-	{
+  Rule {
 		id: size
 		inputs: ["application"]
 		Artifact {
