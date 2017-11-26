@@ -81,7 +81,6 @@ CppApplication
     ChibiOS + "os/license",
     //Drivers
     ChibiOS + "os/hal/ports/STM32/LLD/DACv1",
-    ChibiOS + "os/hal/ports/STM32/LLD/I2Cv1",
     ChibiOS + "os/hal/ports/STM32/LLD/DMAv1",
     ChibiOS + "os/hal/ports/STM32/LLD/EXTIv1",
     ChibiOS + "os/hal/ports/STM32/LLD/GPIOv1",
@@ -203,9 +202,7 @@ CppApplication
       "LLD/USARTv1/hal_uart_lld.h",
       "LLD/USARTv1/hal_uart_lld.c",
       "LLD/USARTv1/hal_serial_lld.h",
-      "LLD/USARTv1/hal_serial_lld.c",
-      "LLD/I2Cv1/hal_i2c_lld.h",
-      "LLD/I2Cv1/hal_i2c_lld.c"
+      "LLD/USARTv1/hal_serial_lld.c"
     ]
   }
   Group { name: "RT"
