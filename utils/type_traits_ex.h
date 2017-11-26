@@ -25,6 +25,17 @@
 #include <stddef.h>
 
 namespace Utils {
+
+  using std::is_signed;
+  using std::is_unsigned;
+  using std::make_signed;
+  using std::make_unsigned;
+
+  template<typename T>
+  static constexpr bool is_signed_v = std::is_signed<T>::value;
+  template<typename T>
+  static constexpr bool is_unsigned_v = std::is_unsigned<T>::value;
+
   template<uint32_t val>
   struct Int2Type {
     enum {value = val};
@@ -48,57 +59,12 @@ namespace Utils {
   };
 
   template<typename T>
-  struct make_unsigned {
-    typedef T type;
-  };
-  template<> struct make_unsigned<int32_t> {
-    typedef uint32_t type;
-  };
-  template<> struct make_unsigned<int16_t> {
-    typedef uint16_t type;
-  };
-  template<> struct make_unsigned<int8_t> {
-    typedef uint8_t type;
-  };
-
-  template<typename T>
-  struct is_signed {
-    static const bool value = false;
-  };
-  template<> struct is_signed<int8_t> {
-    static const bool value = true;
-  };
-  template<> struct is_signed<int16_t> {
-    static const bool value = true;
-  };
-  template<> struct is_signed<int32_t> {
-    static const bool value = true;
-  };
-
-  template<typename T, typename U>
-  struct is_same {
-    static const bool value = false;
-  };
-  template<typename T>
-  struct is_same<T, T> {
-    static const bool value = true;
-  };
-
-  template<bool b, typename T = void>
-  struct enable_if {};
-  template<typename T>
-  struct enable_if<true, T> {
-    typedef T type;
-  };
-
-
-  template<typename T>
-  typename Utils::enable_if < !Utils::is_signed<T>::value, bool >::type is_negative(T)
+  std::enable_if_t<is_unsigned_v<T>, bool > is_negative(T)
   {
     return false;
   }
   template<typename T>
-  typename Utils::enable_if<Utils::is_signed<T>::value, bool>::type is_negative(T value)
+  std::enable_if_t<is_signed_v<T>, bool> is_negative(T value)
   {
     return value < 0;
   }
