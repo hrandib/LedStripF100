@@ -20,41 +20,28 @@
  * SOFTWARE.
  */
 
-#include "stdint.h"
+#include <type_traits>
+#include <stdint.h>
 #include <stddef.h>
 
 namespace Utils
 {
+    using std::conditional_t;
+
 	template<uint32_t val>
 	struct Int2Type
 	{
 		enum {value = val};
 	};
 
-	template<bool b, typename T1, typename T2>
-	struct conditional
-	{
-		typedef T1 type;
-	};
-
-	template<typename T1, typename T2>
-	struct conditional<false, T1, T2>
-	{
-		typedef T2 type;
-	};
-
-	template<size_t sizeBits>
+    template<size_t sizeBits>
 	struct SelectSize
 	{
 		static const bool LessOrEq8 = sizeBits <= 8;
 		static const bool LessOrEq16 = sizeBits <= 16;
 		static const bool LessOrEq32 = sizeBits <= 32;
 
-		typedef typename conditional<
-				LessOrEq8,
-				uint8_t,
-				typename conditional<LessOrEq16, uint16_t, uint32_t>::type>
-				::type type;
+        using type = conditional_t<LessOrEq8, uint8_t, conditional_t<LessOrEq16, uint16_t, uint32_t>>;
 	};
 
 	template<unsigned size>
@@ -63,11 +50,7 @@ namespace Utils
 		static const bool LessOrEq8 = size <= 0xff;
 		static const bool LessOrEq16 = size <= 0xffff;
 
-		typedef typename conditional<
-				LessOrEq8,
-				uint8_t,
-				typename conditional<LessOrEq16, uint16_t, uint32_t>::type>
-				::type type;
+        using type = conditional_t<LessOrEq8, uint8_t, conditional_t<LessOrEq16, uint16_t, uint32_t>>;
 	};
 
 	template<typename T>
