@@ -56,7 +56,7 @@ namespace io
 		}
 		return result;
 	}
-	inline const uint8_t* xtoa(bool val, uint8_t*, uint8_t)
+    inline const char* xtoa(bool val, uint8_t*, uint8_t)
 	{
 		return val ? "True" : "False";
 	}
