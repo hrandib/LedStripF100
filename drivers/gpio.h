@@ -27,16 +27,36 @@
 
 namespace Mcudrv {
 
+                                  //   CNF MODE ODR
+                                  //0b 00  00   0
+  enum class GpioModes {
+    InputAnalog                   = 0b00'00'0,
+    InputFloating                 = 0b01'00'0,
+    InputPullup                   = 0b10'00'1,
+    InputPulldown                 = 0b10'00'0,
+    OutputPushPull                = 0b00'01'0,
+    OutputOpenDrain               = 0b01'01'0,
+    OutputPushPullAlternate       = 0b10'01'0,
+    OutputOpenDrainAlternate      = 0b11'01'0,
+    OutputPushPullFast            = 0b00'11'0,
+    OutputOpenDrainFast           = 0b01'11'0,
+    OutputPushPullFastAlternate   = 0b10'11'0,
+    OutputOpenDrainFastAlternate  = 0b11'11'0,
+    OutputPushPullSlow            = 0b00'10'0,
+    OutputOpenDrainSlow           = 0b01'10'0,
+    OutputPushPullSlowAlternate   = 0b10'10'0,
+    OutputOpenDrainSlowAlternate  = 0b11'10'0,
+  };
+
   struct GpioBase {
+    //compatibility purposes
     enum Cfg {
-      In_float,
-      In_float_int,
-      In_Pullup,
-      In_Pullup_int,
-      Out_OpenDrain,
-      Out_OpenDrain_fast,
-      Out_PushPull,
-      Out_PushPull_fast
+      In_float = uint8_t(GpioModes::InputFloating),
+      In_Pullup = uint8_t(GpioModes::InputPullup),
+      Out_OpenDrain = uint8_t(GpioModes::OutputOpenDrain),
+      Out_OpenDrain_fast = uint8_t(GpioModes::OutputOpenDrainFast),
+      Out_PushPull = uint8_t(GpioModes::OutputPushPull),
+      Out_PushPull_fast = uint8_t(GpioModes::OutputPushPullFast)
     };
   };
 
