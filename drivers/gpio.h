@@ -168,7 +168,7 @@ namespace Mcudrv {
     {
       Base->BRR = mask;
     }
-    static void ClearAndSet(uint8_t clearmask, uint8_t setmask)
+    static void ClearAndSet(DataT clearmask, DataT setmask)
     {
       const DataT value = setmask & ~clearmask;
       Base->ODR = value;
@@ -192,43 +192,43 @@ namespace Mcudrv {
   };
 
   struct GpioNull : GpioBase {
-    typedef uint8_t DataT;
+    using DataT = uint16_t;
     enum { Width = 16 };
     enum { id = 0xFF };
-    template <uint8_t mask, Cfg cfg>
+    template <DataT mask, Cfg cfg>
     static void SetConfig()
     { }
-    template <uint8_t mask, Cfg cfg>
+    template <DataT mask, Cfg cfg>
     static void WriteConfig()
     { }
-    template <uint8_t value>
+    template <DataT value>
     static void Write()
     { }
-    static void Write(uint8_t /*value*/)
+    static void Write(DataT /*value*/)
     { }
-    template <uint8_t mask>
+    template <DataT mask>
     static void Set()
     { }
-    static void Set(uint8_t /*mask*/)
+    static void Set(DataT /*mask*/)
     { }
-    template <uint8_t mask>
+    template <DataT mask>
     static void Clear()
     { }
-    static void Clear(uint8_t /*mask*/)
+    static void Clear(DataT /*mask*/)
     { }
-    template <uint8_t mask>
+    template <DataT mask>
     static void Toggle()
     { }
-    static void Toggle(uint8_t /*mask*/)
+    static void Toggle(DataT /*mask*/)
     { }
-    template<uint8_t clearmask, uint8_t setmask>
+    template<DataT clearmask, DataT setmask>
     static void ClearAndSet()
     { }
-    static uint8_t Read()
+    static DataT Read()
     {
       return 0;
     }
-    static uint8_t ReadODR()
+    static DataT ReadODR()
     {
       return 0;
     }
@@ -242,7 +242,7 @@ namespace Mcudrv {
   PORTDEF(D, 3);
   PORTDEF(E, 4);
 
-  template <typename Port_, uint8_t Mask_>
+  template <typename Port_, uint16_t Mask_>
   class TPin
   {
   public:
@@ -253,19 +253,15 @@ namespace Mcudrv {
       port_id = Port::id
     };
     static const bool Exist = mask;
-#pragma inline=forced
     template <GpioBase::Cfg cfg>
     static void SetConfig()
     {
       Port::template SetConfig<mask, cfg>();
     }
-
-#pragma inline=forced
     static void Set()
     {
       Port::template Set<mask>();
     }
-#pragma inline=forced
     static void SetOrClear(bool cond)
     {
       if(cond) {
@@ -275,22 +271,18 @@ namespace Mcudrv {
         Port::template Clear<mask>();
       }
     }
-#pragma inline=forced
     static void Clear()
     {
       Port::template Clear<mask>();
     }
-#pragma inline=forced
     static void Toggle()
     {
       Port::template Toggle<mask>();
     }
-#pragma inline=forced
     static bool IsSet()
     {
       return Port::Read() & mask;
     }
-#pragma inline=forced
     static bool IsODRSet()
     {
       return Port::ReadODR() & mask;
@@ -299,15 +291,21 @@ namespace Mcudrv {
 
   template<typename Pin>
   struct InvertedPin : public Pin {
-#pragma inline=forced
     static void Set()
     {
       Pin::Clear();
     }
-#pragma inline=forced
     static void Clear()
     {
       Pin::Set();
+    }
+    static bool IsSet()
+    {
+      return !Pin::IsSet();
+    }
+    static bool IsODRSet()
+    {
+      return !Pin::IsODRSet();
     }
   };
 
@@ -324,20 +322,24 @@ namespace Mcudrv {
   PINSDEF(C, c);
   PINSDEF(D, d);
   PINSDEF(E, e);
-  PINSDEF(F, f);
-  PINSDEF(G, g);
-  PINSDEF(H, h);
-  PINSDEF(I, i);
   typedef TPin<GpioNull, 0x0> Nullpin;
 
   enum {
-    P0 = 0x01,
-    P1 = 0x02,
-    P2 = 0x04,
-    P3 = 0x08,
-    P4 = 0x10,
-    P5 = 0x20,
-    P6 = 0x40,
-    P7 = 0x80
+    P0  = 0x0001,
+    P1  = 0x0002,
+    P2  = 0x0004,
+    P3  = 0x0008,
+    P4  = 0x0010,
+    P5  = 0x0020,
+    P6  = 0x0040,
+    P7  = 0x0080,
+    P8  = 0x0100,
+    P9  = 0x0200,
+    P10 = 0x0400,
+    P11 = 0x0800,
+    P12 = 0x1000,
+    P13 = 0x2000,
+    P14 = 0x4000,
+    P15 = 0x8000
   };
 } //Mcudrv
