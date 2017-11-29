@@ -19,12 +19,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef I2C_WRAPPER_H
-#define I2C_WRAPPER_H
+#ifndef I2C_FALLBACK_H
+#define I2C_FALLBACK_H
 
+#include "ch_extended.h"
 #include "gpio.h"
 
 namespace Twis {
+
+  using Mcudrv::GpioBase;
+
   enum {
     BaseAddrLM75 = 0x48,
     BaseAddr24C = 0x50,
@@ -47,21 +51,17 @@ namespace Twis {
     NoAck, Ack
   };
 
-  template<Mode mode = Standard, typename Scl = Pe1, typename Sda = Pe2>
+  template<typename Scl, typename Sda>
   class SoftTwi
   {
   private:
     static void Delay()
     {
-      if(mode == Standard) {
-        delay_us<3>();
-      }
-      else {
-        __no_operation();
-        __no_operation();
-      }
+      __NOP();
+      __NOP();
+      __NOP();
+      __NOP();
     }
-#pragma inline=forced
     static bool Release()
     {
       for(uint8_t scl = 0; scl < 10; ++scl) {
@@ -77,7 +77,6 @@ namespace Twis {
       return false; // Line is still busy
     }
   protected:
-#pragma inline=forced
     static void Start()
     {
       Sda::Clear();
@@ -85,7 +84,6 @@ namespace Twis {
       Scl::Clear();
       Delay();
     }
-#pragma inline=forced
     static void Stop()
     {
       Scl::Clear();
@@ -130,7 +128,7 @@ namespace Twis {
       uint8_t data = 0;
       Sda::Set();
       for(uint8_t i = 0; i < 8; ++i) {
-        data = (data << 1U);
+        data = uint8_t(data << 1);
         Scl::Set();
         Delay();
         if(Sda::IsSet()) {
@@ -159,7 +157,7 @@ namespace Twis {
     {
       if((uint8_t)Scl::port_id == (uint8_t)Sda::port_id) {
         Scl::Port::Set((uint8_t)Scl::mask | (uint8_t)Sda::mask);
-        Scl::Port::template SetConfig < (uint8_t)Scl::mask | (uint8_t)Sda::mask, GpioBase::Out_OpenDrain_fast > ();
+        Scl::Port::template SetConfig<(uint8_t)Scl::mask | (uint8_t)Sda::mask, GpioBase::Out_OpenDrain_fast>();
       }
       else {
         Scl::Set();
@@ -172,7 +170,6 @@ namespace Twis {
       }
       return true;  //Bus Ready
     }
-#pragma inline=forced
     static void Restart()
     {
       Sda::Set();
@@ -184,19 +181,17 @@ namespace Twis {
     {
       Start();
       AckState state = WriteByte(addr << 1);
-      if(state == NoAck) {
-        goto End;
-      }
-      while(length--) {
-        if(WriteByte(*buf++) == NoAck) {
-          break;
+      if(state != NoAck) {
+        while(length--) {
+          if(WriteByte(*buf++) == NoAck) {
+            break;
+          }
+        }
+        if(!length) {
+          state = Ack;
         }
       }
-      if(!length) {
-        state = Ack;
-      }
-End:
-      if(!noStop) {
+      else if(!noStop) {
         Stop();
       }
       return state;
@@ -233,7 +228,7 @@ End:
     }
   };
 
-  template<typename Twi = SoftTwi<>>
+  template<typename Twi>
   class Lm75
   {
   public:
@@ -246,7 +241,7 @@ End:
     }
   };
 
-  template<typename Twi = SoftTwi<>>
+  template<typename Twi>
   class Eeprom24c
   {
   public:
@@ -254,7 +249,7 @@ End:
 
   };
 
-  template<typename Twi = SoftTwi<>>
+  template<typename Twi>
   class Bh1750
   {
   public:
@@ -352,7 +347,7 @@ End:
     template<typename Uart>
     static void PrintCalArray()
     {
-      const uint8_t* const names[] = {
+      const char* const names[] = {
         "AC1", "AC2", "AC3", "AC4", "AC5", "AC6",
         "B1", "B2",
         "MB", "MC", "MD"
@@ -375,7 +370,7 @@ End:
       if(!SendCommand(CmdTemperature)) {
         return false;
       }
-      delay_ms(5);
+      Rtos::Sleep(MS2ST(5));
       uint16_t rawvalueT = GetReg(RegData);
       int32_t x1 = ((int32_t)rawvalueT - calArr[AC6]) * calArr[AC5] / (1U << 15);
       int32_t x2 = (int32_t)((int16_t)calArr[MC]) * (1U << 11) / (x1 + calArr[MD]);
@@ -423,7 +418,7 @@ End:
     static int16_t GetTemperature()
     {
       SendCommand(CmdTemperature);
-      delay_ms(5);
+      Rtos::Sleep(MS2ST(5));
       uint16_t rawvalue = GetReg(RegData);
       int32_t x1 = ((int32_t)rawvalue - calArr[AC6]) * calArr[AC5] / (1U << 15);
       int32_t x2 = (int32_t)((int16_t)calArr[MC]) * (1U << 11) / (x1 + calArr[MD]);
@@ -438,6 +433,8 @@ End:
   class Bmp280
   {
   public:
+    using s32 = int32_t;
+    using u32 = uint32_t;
     //ctrl_meas register defs 0xF4
     enum Toversampling {
       OsTx1 = 1U << 5,
@@ -561,7 +558,7 @@ End:
     template<typename Out>
     static void PrintCalArray()
     {
-      static const uint8_t* const names[] = {
+      static const char* const names[] = {
         "T1", "T2", "T3",
         "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"
       };
@@ -689,4 +686,4 @@ End:
 }//i2c
 
 
-#endif // I2C_WRAPPER_H
+#endif // I2C_FALLBACK_H
