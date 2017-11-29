@@ -61,7 +61,7 @@ namespace Mcudrv {
     };
   };
 
-  template <uintptr_t baseaddr, uint8_t ID>
+  template <uintptr_t baseAddr, uint8_t ID>
   class Gpio : GpioBase
   {
   public:
@@ -69,7 +69,10 @@ namespace Mcudrv {
     enum { Width = 16 };
     enum { id = ID };
   private:
-    static constexpr GPIO_TypeDef* Base = reinterpret_cast<GPIO_TypeDef*>(baseaddr);
+    constexpr static inline GPIO_TypeDef* Regs()
+    {
+      return reinterpret_cast<GPIO_TypeDef*>(baseAddr);
+    }
     static constexpr uint32_t Unpack2Bit(uint32_t mask, uint32_t config, uint32_t value = 0)
     {
       mask = (mask & 0xff00)     << 8 | (mask & 0x00ff);
@@ -95,101 +98,101 @@ namespace Mcudrv {
     static void SetConfig()
     {
       if(mask & 0xFF) {
-        Base->CRL = Unpack4Bit(mask, config, Base->CRL);
+        Regs()->CRL = Unpack4Bit(mask, config, Regs()->CRL);
       }
       constexpr DataT maskH = mask >> 8;
       if(maskH) {
-        Base->CRH = Unpack4Bit(maskH, config, Base->CRH);
+        Regs()->CRH = Unpack4Bit(maskH, config, Regs()->CRH);
       }
     }
     template <DataT mask, Cfg config>
     static void WriteConfig()
     {
       if(mask & 0xFF) {
-        Base->CRL = Unpack4Bit(mask, config);
+        Regs()->CRL = Unpack4Bit(mask, config);
       }
       constexpr DataT maskH = mask >> 8;
       if(maskH) {
-        Base->CRH = Unpack4Bit(maskH, config);
+        Regs()->CRH = Unpack4Bit(maskH, config);
       }
     }
     template <DataT mask>
 
     static void Set()
     {
-      Base->BSRR = mask;
+      Regs()->BSRR = mask;
     }
     template <DataT mask>
     static void Clear()
     {
-      Base->BRR = mask;
+      Regs()->BRR = mask;
     }
     template<DataT clearmask, DataT setmask>
     static void ClearAndSet()
     {
       const DataT value = setmask & ~clearmask;
-      Base->ODR = value;
+      Regs()->ODR = value;
     }
     template <DataT value>
     static void Write()
     {
-      Base->ODR = value;
+      Regs()->ODR = value;
     }
     template <DataT mask>
     static void Toggle()
     {
-      Base->ODR ^= mask;
+      Regs()->ODR ^= mask;
     }
 
     //normal interface
     static void SetConfig(DataT mask, Cfg config)
     {
       if(mask & 0xFF) {
-        Base->CRL = Unpack4Bit(mask, config, Base->CRL);
+        Regs()->CRL = Unpack4Bit(mask, config, Regs()->CRL);
       }
       mask >>= 8;
       if(mask) {
-        Base->CRH = Unpack4Bit(mask, config, Base->CRH);
+        Regs()->CRH = Unpack4Bit(mask, config, Regs()->CRH);
       }
     }
     static void WriteConfig(DataT mask, Cfg config)
     {
       if(mask & 0xFF) {
-        Base->CRL = Unpack4Bit(mask, config);
+        Regs()->CRL = Unpack4Bit(mask, config);
       }
       mask >>= 8;
       if(mask) {
-        Base->CRH = Unpack4Bit(mask, config);
+        Regs()->CRH = Unpack4Bit(mask, config);
       }
     }
     static void Set(DataT mask)
     {
-      Base->BSRR = mask;
+      Regs()->BSRR = mask;
     }
     static void Clear(DataT mask)
     {
-      Base->BRR = mask;
+      Regs()->BRR = mask;
     }
     static void ClearAndSet(DataT clearmask, DataT setmask)
     {
       const DataT value = setmask & ~clearmask;
-      Base->ODR = value;
+      Regs()->ODR = value;
     }
     static void Write(DataT value)
     {
-      Base->ODR = value;
+      Regs()->ODR = value;
     }
     static void Toggle(DataT mask)
     {
-      Base->ODR ^= mask;
+      Regs()->ODR ^= mask;
     }
     static DataT Read()
     {
-      return Base->IDR;
+      return Regs()->IDR;
     }
     static DataT ReadODR()
     {
-      return Base->ODR;
+      return Regs()->ODR;
     }
   };
 
