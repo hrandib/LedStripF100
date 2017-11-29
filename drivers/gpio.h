@@ -40,27 +40,39 @@ namespace Mcudrv {
     };
   };
 
-  template <uint16_t baseaddr, uint8_t ID>
+  template <uintptr_t baseaddr, uint8_t ID>
   class Gpio : GpioBase
   {
-  private:
-#pragma inline=forced
-    static GPIO_TypeDef* GetBase()
-    {
-      return reinterpret_cast<GPIO_TypeDef*>(baseaddr);
-    }
   public:
-    typedef Gpio Base;
-    typedef uint8_t DataT;
-    enum { Width = 8 };
+    using DataT = uint16_t;
+    enum { Width = 16 };
     enum { id = ID };
+  private:
+    static constexpr GPIO_TypeDef* Base = reinterpret_cast<GPIO_TypeDef*>(baseaddr);
+    static constexpr uint32_t Unpack2Bit(uint32_t mask, uint32_t config, uint32_t value = 0)
+    {
+      mask = (mask & 0xff00)     << 8 | (mask & 0x00ff);
+      mask = (mask & 0x00f000f0) << 4 | (mask & 0x000f000f);
+      mask = (mask & 0x0C0C0C0C) << 2 | (mask & 0x03030303);
+      mask = (mask & 0x22222222) << 1 | (mask & 0x11111111);
+      return (value & ~(mask*0x03)) | mask * config;
+    }
+    static constexpr uint32_t Unpack4Bit(uint32_t mask, uint32_t config, uint32_t value = 0)
+    {
+      mask = (mask & 0xf0) << 12 | (mask & 0x0f);
+      mask = (mask & 0x000C000C) << 6 | (mask & 0x00030003);
+      mask = (mask & 0x02020202) << 3 | (mask & 0x01010101);
+      return (value & ~(mask * 0x15)) | mask * config;
+    }
+
+  public:
 
 #pragma inline=forced
     template <uint8_t mask, Cfg cfg>
     static void SetConfig()
     {
       if(cfg & 0x01) {
-        GetBase()->CR2 |= mask;
+        Base->CR2 |= mask;
       }
       else {
         GetBase()->CR2 &= ~mask;
