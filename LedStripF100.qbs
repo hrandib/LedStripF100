@@ -59,6 +59,7 @@ CppApplication
     "utils",
     "wake",
     "resources",
+    "drivers",
     "source",
     //Startup
     ChibiOS + "os/common/startup/ARMCMx/compilers/GCC",
