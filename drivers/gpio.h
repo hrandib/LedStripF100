@@ -145,9 +145,9 @@ namespace Mcudrv {
       if(mask & 0xFF) {
         Base->CRL = Unpack4Bit(mask, config, Base->CRL);
       }
-      constexpr DataT maskH = mask >> 8;
-      if(maskH) {
-        Base->CRH = Unpack4Bit(maskH, config, Base->CRH);
+      mask >>= 8;
+      if(mask) {
+        Base->CRH = Unpack4Bit(mask, config, Base->CRH);
       }
     }
     static void WriteConfig(DataT mask, Cfg config)
