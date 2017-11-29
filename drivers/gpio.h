@@ -86,110 +86,86 @@ namespace Mcudrv {
     }
 
   public:
-
-#pragma inline=forced
-    template <uint8_t mask, Cfg cfg>
+    //constant interface
+    template <DataT mask, Cfg config>
     static void SetConfig()
     {
-      if(cfg & 0x01) {
-        Base->CR2 |= mask;
+      if(mask & 0xFF) {
+        Base->CRL = Unpack4Bit(mask, config, Base->CRL);
       }
-      else {
-        GetBase()->CR2 &= ~mask;
-      }
-      if((cfg >> 1) & 0x01) {
-        GetBase()->CR1 |= mask;
-      }
-      else {
-        GetBase()->CR1 &= ~mask;
-      }
-      if((cfg >> 2) & 0x01) {
-        GetBase()->DDR |= mask;
-      }
-      else {
-        GetBase()->DDR &= ~mask;
+      constexpr DataT maskH = mask >> 8;
+      if(maskH) {
+        Base->CRH = Unpack4Bit(maskH, config, Base->CRH);
       }
     }
-
-#pragma inline=forced
-    template <uint8_t mask, Cfg cfg>
+    template <DataT mask, Cfg config>
     static void WriteConfig()
     {
-      GetBase()->CR2 = ((cfg & 0x01) * 0xff) & mask;
-      GetBase()->CR1 = (((cfg >> 1) & 0x01) * 0xff) & mask;
-      GetBase()->DDR = (((cfg >> 2) & 0x01) * 0xff) & mask;
+      if(mask & 0xFF) {
+        Base->CRL = Unpack4Bit(mask, config);
+      }
+      constexpr DataT maskH = mask >> 8;
+      if(maskH) {
+        Base->CRH = Unpack4Bit(maskH, config);
+      }
     }
+    template <DataT mask>
 
-#pragma inline=forced
-    template <uint8_t value>
-    static void Write()
-    {
-      GetBase()->ODR = value;
-    }
-#pragma inline=forced
-    static void Write(uint8_t value)
-    {
-      GetBase()->ODR = value;
-    }
-
-#pragma inline=forced
-    template <uint8_t mask>
     static void Set()
     {
-      GetBase()->ODR |= mask;
+      Base->BSRR = mask;
     }
-#pragma inline=forced
-    static void Set(uint8_t mask)
-    {
-      GetBase()->ODR |= mask;
-    }
-
-#pragma inline=forced
-    template <uint8_t mask>
+    template <DataT mask>
     static void Clear()
     {
-      GetBase()->ODR &= ~mask;
+      Base->BRR = mask;
     }
-#pragma inline=forced
-    static void Clear(uint8_t mask)
-    {
-      GetBase()->ODR &= ~mask;
-    }
-
-#pragma inline=forced
-    template <uint8_t mask>
-    static void Toggle()
-    {
-      GetBase()->ODR ^= mask;
-    }
-#pragma inline=forced
-    static void Toggle(uint8_t mask)
-    {
-      GetBase()->ODR ^= mask;
-    }
-
-#pragma inline=forced
-    static uint8_t Read()
-    {
-      return GetBase()->IDR;
-    }
-#pragma inline=forced
-    static uint8_t ReadODR()
-    {
-      return GetBase()->ODR;
-    }
-#pragma inline=forced
-    template<uint8_t clearmask, uint8_t setmask>
+    template<DataT clearmask, DataT setmask>
     static void ClearAndSet()
     {
       const DataT value = setmask & ~clearmask;
-      GetBase()->ODR = value;
+      Base->ODR = value;
     }
-#pragma inline=forced
+    template <DataT value>
+    static void Write()
+    {
+      Base->ODR = value;
+    }
+    template <DataT mask>
+    static void Toggle()
+    {
+      Base->ODR ^= mask;
+    }
+
+    //normal interface
+    static void Set(DataT mask)
+    {
+      Base->BSRR = mask;
+    }
+    static void Clear(DataT mask)
+    {
+      Base->BRR = mask;
+    }
     static void ClearAndSet(uint8_t clearmask, uint8_t setmask)
     {
       const DataT value = setmask & ~clearmask;
-      GetBase()->ODR = value;
+      Base->ODR = value;
+    }
+    static void Write(DataT value)
+    {
+      Base->ODR = value;
+    }
+    static void Toggle(DataT mask)
+    {
+      Base->ODR ^= mask;
+    }
+    static DataT Read()
+    {
+      return Base->IDR;
+    }
+    static DataT ReadODR()
+    {
+      return Base->ODR;
     }
   };
 
