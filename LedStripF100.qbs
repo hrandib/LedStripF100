@@ -59,6 +59,7 @@ CppApplication
     "utils",
     "wake",
     "resources",
+    "source",
     //Startup
     ChibiOS + "os/common/startup/ARMCMx/compilers/GCC",
     ChibiOS + "os/common/startup/ARMCMx/devices/STM32F1xx",
@@ -259,7 +260,8 @@ CppApplication
 	}
   Group {	name: "Main"
     files: [
-      "main.cpp"
+      "main.cpp",
+      "source/button_control.h",
     ]
     excludeFiles: [
 			"**/*_res.c",
