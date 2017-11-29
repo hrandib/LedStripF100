@@ -31,6 +31,7 @@
 #include "wake_base.h"
 #include "led_driver.h"
 #include "button_control.h"
+#include "display.h"
 
 using namespace Rtos;
 
