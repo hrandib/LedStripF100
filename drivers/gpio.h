@@ -309,19 +309,28 @@ namespace Mcudrv {
     }
   };
 
-#define PINSDEF(x,y)  typedef TPin<Gpio##x, 0x01> P##y##0;\
-            typedef TPin<Gpio##x, 0x02> P##y##1;\
-            typedef TPin<Gpio##x, 0x04> P##y##2;\
-            typedef TPin<Gpio##x, 0x08> P##y##3;\
-            typedef TPin<Gpio##x, 0x10> P##y##4;\
-            typedef TPin<Gpio##x, 0x20> P##y##5;\
-            typedef TPin<Gpio##x, 0x40> P##y##6;\
-            typedef TPin<Gpio##x, 0x80> P##y##7
-  PINSDEF(A, a);
-  PINSDEF(B, b);
-  PINSDEF(C, c);
-  PINSDEF(D, d);
-  PINSDEF(E, e);
+#define PINSDEF(x, y) \
+  			typedef TPin<Gpio##x, 0x0001> P##y##0;\
+            typedef TPin<Gpio##x, 0x0002> P##y##1;\
+            typedef TPin<Gpio##x, 0x0004> P##y##2;\
+            typedef TPin<Gpio##x, 0x0008> P##y##3;\
+            typedef TPin<Gpio##x, 0x0010> P##y##4;\
+            typedef TPin<Gpio##x, 0x0020> P##y##5;\
+            typedef TPin<Gpio##x, 0x0040> P##y##6;\
+            typedef TPin<Gpio##x, 0x0080> P##y##7;\
+            typedef TPin<Gpio##x, 0x0100> P##y##8;\
+            typedef TPin<Gpio##x, 0x0200> P##y##9;\
+            typedef TPin<Gpio##x, 0x0400> P##y##10;\
+            typedef TPin<Gpio##x, 0x0800> P##y##11;\
+            typedef TPin<Gpio##x, 0x1000> P##y##12;\
+            typedef TPin<Gpio##x, 0x2000> P##y##13;\
+            typedef TPin<Gpio##x, 0x4000> P##y##14;\
+            typedef TPin<Gpio##x, 0x8000> P##y##15;
+  PINSDEF(A, a)
+  PINSDEF(B, b)
+  PINSDEF(C, c)
+  PINSDEF(D, d)
+  PINSDEF(E, e)
   typedef TPin<GpioNull, 0x0> Nullpin;
 
   enum {
