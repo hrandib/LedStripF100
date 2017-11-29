@@ -77,8 +77,12 @@ namespace Rtos {
       SysLockGuardFromISR lock;
       chThdResumeI(&ref_, msg);
     }
-
   };
-}
+
+  static inline void Sleep(systime_t interval)
+  {
+      chThdSleep(interval);
+  }
+}//Rtos
 
 #endif // CH_EXTENDED_H
