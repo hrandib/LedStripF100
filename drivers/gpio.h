@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+//  Simplified fully static GPIO control interface
+
 #pragma once
 
 #include "stm32f1xx.h"
@@ -138,6 +140,26 @@ namespace Mcudrv {
     }
 
     //normal interface
+    static void SetConfig(DataT mask, Cfg config)
+    {
+      if(mask & 0xFF) {
+        Base->CRL = Unpack4Bit(mask, config, Base->CRL);
+      }
+      constexpr DataT maskH = mask >> 8;
+      if(maskH) {
+        Base->CRH = Unpack4Bit(maskH, config, Base->CRH);
+      }
+    }
+    static void WriteConfig(DataT mask, Cfg config)
+    {
+      if(mask & 0xFF) {
+        Base->CRL = Unpack4Bit(mask, config);
+      }
+      mask >>= 8;
+      if(mask) {
+        Base->CRH = Unpack4Bit(mask, config);
+      }
+    }
     static void Set(DataT mask)
     {
       Base->BSRR = mask;
@@ -170,73 +192,55 @@ namespace Mcudrv {
   };
 
   struct GpioNull : GpioBase {
-    typedef GpioNull Base;
     typedef uint8_t DataT;
-    enum { Width = 8 };
+    enum { Width = 16 };
     enum { id = 0xFF };
-#pragma inline=forced
     template <uint8_t mask, Cfg cfg>
     static void SetConfig()
     { }
-#pragma inline=forced
     template <uint8_t mask, Cfg cfg>
     static void WriteConfig()
     { }
-#pragma inline=forced
     template <uint8_t value>
     static void Write()
     { }
-#pragma inline=forced
     static void Write(uint8_t /*value*/)
     { }
-#pragma inline=forced
     template <uint8_t mask>
     static void Set()
     { }
-#pragma inline=forced
     static void Set(uint8_t /*mask*/)
     { }
-#pragma inline=forced
     template <uint8_t mask>
     static void Clear()
     { }
-#pragma inline=forced
     static void Clear(uint8_t /*mask*/)
     { }
-#pragma inline=forced
     template <uint8_t mask>
     static void Toggle()
     { }
-#pragma inline=forced
     static void Toggle(uint8_t /*mask*/)
     { }
-#pragma inline=forced
     template<uint8_t clearmask, uint8_t setmask>
     static void ClearAndSet()
     { }
-#pragma inline=forced
     static uint8_t Read()
     {
       return 0;
     }
-#pragma inline=forced
     static uint8_t ReadODR()
     {
       return 0;
     }
   };
 
-#define PORTDEF(x,y) typedef Gpio<GPIO##x##_BaseAddress, y> Gpio##x
+#define PORTDEF(x,y) typedef Gpio<GPIO##x##_BASE, y> Gpio##x
 
   PORTDEF(A, 0);
   PORTDEF(B, 1);
   PORTDEF(C, 2);
   PORTDEF(D, 3);
   PORTDEF(E, 4);
-  PORTDEF(F, 5);
-  PORTDEF(G, 6);
-  PORTDEF(H, 7);
-  PORTDEF(I, 8);
 
   template <typename Port_, uint8_t Mask_>
   class TPin
@@ -245,7 +249,7 @@ namespace Mcudrv {
     typedef Port_ Port;
     enum {
       mask = Mask_,
-      position = stdx::MaskToPosition<mask>::value,
+      position = Utils::MaskToPosition<mask>::value,
       port_id = Port::id
     };
     static const bool Exist = mask;
