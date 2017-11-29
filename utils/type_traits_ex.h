@@ -19,6 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#ifndef TYPE_TRAITS_EX_H
+#define TYPE_TRAITS_EX_H
 
 #include <type_traits>
 #include <stdint.h>
@@ -97,3 +99,4 @@ namespace Utils {
   };
 }
 
+#endif //TYPE_TRAITS_H
