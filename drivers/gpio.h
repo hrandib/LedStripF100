@@ -28,7 +28,6 @@
 #include "type_traits_ex.h"
 
 namespace Mcudrv {
-
                                   //   CNF MODE ODR
                                   //0b 00  00   0
   enum class GpioModes {
@@ -86,8 +85,11 @@ namespace Mcudrv {
       mask = (mask & 0x02020202) << 3 | (mask & 0x01010101);
       return (value & ~(mask * 0x15)) | mask * config;
     }
-
   public:
+    static void Enable()
+    {
+      RCC->APB2ENR |= RCC_APB2ENR_IOPAEN << id;
+    }
     //constant interface
     template <DataT mask, Cfg config>
     static void SetConfig()
@@ -233,6 +235,18 @@ namespace Mcudrv {
       return 0;
     }
   };
+
+  template<typename... Ports>
+  static void PortEnable()
+  {
+    static_assert(((Ports::id < 5) && ...), "Wrong port ID");
+    RCC->APB2ENR |= ((RCC_APB2ENR_IOPAEN << Ports::id) | ...);
+  }
+  template<typename... Ports>
+  static void PortEnable(Ports...)
+  {
+    PortEnable<Ports...>();
+  }
 
 #define PORTDEF(x,y) typedef Gpio<GPIO##x##_BASE, y> Gpio##x
 
