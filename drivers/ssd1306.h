@@ -92,13 +92,15 @@ namespace Mcudrv {
     }
     static void SetX(uint8_t x)
     {
-      const uint8_t seq[] = { CtrlCmdStream, CmdSetColStartHigher | (x >> 4), CmdSetColStartLower | (x & 0x0F)};
+      const uint8_t seq[] = { CtrlCmdStream,
+                              uint8_t(CmdSetColStartHigher | (x >> 4)),
+                              uint8_t(CmdSetColStartLower | (x & 0x0F))};
       Twi::Write(BaseAddr, seq, sizeof(seq));
       x_ = x;
     }
     static void SetY(uint8_t y)
     {
-      const uint8_t seq[] = { CtrlCmdSingle, CmdSetPageStart | (y & 0x07)};
+      const uint8_t seq[] = { CtrlCmdSingle, uint8_t(CmdSetPageStart | (y & 0x07))};
       Twi::Write(BaseAddr, seq, sizeof(seq));
       y_ = y;
     }
