@@ -39,6 +39,9 @@ using LedDriver = Wk::LedDriver<>;
 
 using ButtonControl = Wk::ButtonControl<LedDriver>;
 
+using Twi = Twis::SoftTwi<Mcudrv::Pb6, Mcudrv::Pb7>;
+using Disp = Mcudrv::ssd1306<Twi>;
+
 static Wk::Wake<LedDriver> wake(UARTD1, 115200, GPIOA, 10);
 
 /*
@@ -54,12 +57,27 @@ int main(void) {
    *   RTOS is active.
    */
   halInit();
-  System::init();
-
-  wake.Init();
-  ButtonControl buttonControl{GPIOB, 10};
+//  System::init();
+  using namespace Mcudrv;
+  GpioB::Enable();
+//  wake.Init();
+  Twi::Init();
+  Disp::Init();
+  Disp::Fill(Mcudrv::Color::Solid);
+  Disp::Puts("Hello ");
+  Disp::Puts("Hello ");
+//  GpioB::SetConfig<P6 | P7, GpioBase::Cfg(GpioModes::OutputOpenDrain)>();
+//  GpioB::Set(P6 | P7);
+//  Pb0::SetConfig<GpioBase::Cfg(GpioModes::OutputPushPull)>();
+//  ButtonControl buttonControl{GPIOB, 10};
   while (true) {
-    buttonControl.Update();
-    BaseThread::sleep(buttonControl.GetUpdatePeriod());
+//    Pb0::Set();
+    volatile size_t count = 100000;
+    while(count--) { }
+    Pb0::Clear();
+    count = 100000;
+    while(count--) { }
+//    buttonControl.Update();
+//    BaseThread::sleep(buttonControl.GetUpdatePeriod());
   }
 }
