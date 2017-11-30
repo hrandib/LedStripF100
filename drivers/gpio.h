@@ -98,23 +98,19 @@ namespace Mcudrv {
     static void SetConfig()
     {
       if(mask & 0xFF) {
-        Regs()->CRL = Unpack4Bit(mask, config, Regs()->CRL);
+        Regs()->CRL = Unpack4Bit(mask, config >> 1, Regs()->CRL);
       }
       constexpr DataT maskH = mask >> 8;
       if(maskH) {
-        Regs()->CRH = Unpack4Bit(maskH, config, Regs()->CRH);
+        Regs()->CRH = Unpack4Bit(maskH, config >> 1, Regs()->CRH);
       }
     }
     template <DataT mask, Cfg config>
     static void WriteConfig()
     {
-      if(mask & 0xFF) {
-        Regs()->CRL = Unpack4Bit(mask, config);
-      }
+      Regs()->CRL = Unpack4Bit(mask, config >> 1);
       constexpr DataT maskH = mask >> 8;
-      if(maskH) {
-        Regs()->CRH = Unpack4Bit(maskH, config);
-      }
+      Regs()->CRH = Unpack4Bit(maskH, config >> 1);
     }
     template <DataT mask>
 
@@ -148,22 +144,18 @@ namespace Mcudrv {
     static void SetConfig(DataT mask, Cfg config)
     {
       if(mask & 0xFF) {
-        Regs()->CRL = Unpack4Bit(mask, config, Regs()->CRL);
+        Regs()->CRL = Unpack4Bit(mask, config >> 1, Regs()->CRL);
       }
       mask >>= 8;
       if(mask) {
-        Regs()->CRH = Unpack4Bit(mask, config, Regs()->CRH);
+        Regs()->CRH = Unpack4Bit(mask, config >> 1, Regs()->CRH);
       }
     }
     static void WriteConfig(DataT mask, Cfg config)
     {
-      if(mask & 0xFF) {
-        Regs()->CRL = Unpack4Bit(mask, config);
-      }
+      Regs()->CRL = Unpack4Bit(mask, config >> 1);
       mask >>= 8;
-      if(mask) {
-        Regs()->CRH = Unpack4Bit(mask, config);
-      }
+      Regs()->CRH = Unpack4Bit(mask, config >> 1);
     }
     static void Set(DataT mask)
     {
