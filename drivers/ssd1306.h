@@ -32,13 +32,35 @@ namespace Mcudrv {
   using Resources::Bitmap;
   using Resources::Font;
 
+  struct ssd1306_128x64
+  {
+    enum {
+      Max_X = 127,
+      Max_Y = 63,
+    };
+  protected:
+    enum {
+      CmdComPinMapValue = 0x12
+    };
+  };
+  struct ssd1306_128x32
+  {
+    enum {
+      Max_X = 127,
+      Max_Y = 31
+    };
+  protected:
+    enum {
+      CmdComPinMapValue = 0x02
+    };
+  };
+
 //SSD1306 driver
-  template<typename Twi>
-  class ssd1306 : Twi
+  template<typename Twi, typename Type = ssd1306_128x64>
+  class ssd1306 : Twi, public Type
   {
   private:
     enum { BaseAddr = 0x3C };
-    enum { Max_X = 127, Max_Y = 63 };
     enum ControlByte {
       CtrlCmdSingle = 0x80,
       CtrlCmdStream = 0x00,
@@ -78,7 +100,7 @@ namespace Mcudrv {
 
       CmdChargePump = 0x8D  //with followed by 0x14(internal gen) or 0x10(external gen)
     };
-    static const uint8_t initSequence[24];
+    static const uint8_t initSequence[26];
     static uint8_t x_, y_;
   public:
     static void Init()
@@ -166,7 +188,7 @@ namespace Mcudrv {
       }
       //adjust height offset
       static uint8_t prevHeight = Resources::font5x8.Height() >> 3;
-      int8_t diff = prevHeight - heightInBytes;
+      int8_t diff = (int8_t)(prevHeight - heightInBytes);
       if(diff) {
         uint8_t ypos = y_;
         if(diff < 0) { //current font bigger than previous
@@ -182,7 +204,7 @@ namespace Mcudrv {
         prevHeight = heightInBytes;
       }
       //end of line
-      if((Max_X - x_) < font.Width()) {
+      if((Type::Max_X - x_) < font.Width()) {
         SetXY(0, (y_ + heightInBytes) & 0x07);
       }
       Draw(Bitmap(font[ch], font.Width(), font.Height()));
@@ -206,23 +228,24 @@ namespace Mcudrv {
       Puts(io::xtoa(value, buf, base));
     }
   };
-  template<typename Twi>
-  uint8_t ssd1306<Twi>::x_;
-  template<typename Twi>
-  uint8_t  ssd1306<Twi>::y_;
-  template<typename Twi>
-  const uint8_t ssd1306<Twi>::initSequence[] = { CtrlCmdStream,
+  template<typename Twi, typename Type>
+  uint8_t ssd1306<Twi, Type>::x_;
+  template<typename Twi, typename Type>
+  uint8_t  ssd1306<Twi, Type>::y_;
+  template<typename Twi, typename Type>
+  const uint8_t ssd1306<Twi, Type>::initSequence[] = { CtrlCmdStream,
                                                  CmdSetColRange, 0x00, 0x7F,
                                                  CmdSetPageRange, 0x00, 0x07,
                                                  CmdDisplayOff,  //default
                                                  //      CmdClkDiv, 0x80,    //default = 0x80
                                                  //      CmdMuxRatio, 0x3F,    //default = 0x3F
                                                  //      CmdDisplayOffset, 0x00, //default = 0
+                                                 CmdMuxRatio, 0x3F,
                                                  CmdChargePump, 0x14,
                                                  CmdMemAddrMode, ModePage, //default = 0x02 (Page)
                                                  CmdSegmentRemap,
                                                  CmdComScanMode,
-                                                 CmdComPinMap, 0x12,
+                                                 CmdComPinMap, Type::CmdComPinMapValue,
                                                  CmdSetContrast, 0xCF,   //default = 0x7F
                                                  CmdPrecharge, 0xF1,
                                                  CmdVComHDeselect, 0x40, //default = 0x20
