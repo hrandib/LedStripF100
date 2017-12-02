@@ -191,7 +191,7 @@ namespace Twis {
           state = Ack;
         }
       }
-      else if(!noStop) {
+      if(!noStop) {
         Stop();
       }
       return state;
