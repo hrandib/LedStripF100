@@ -59,134 +59,160 @@ namespace Mcudrv {
       Out_PushPull = uint8_t(GpioModes::OutputPushPull),
       Out_PushPull_fast = uint8_t(GpioModes::OutputPushPullFast)
     };
-  };
-
-  template <uintptr_t baseAddr, uint8_t ID>
-  class Gpio : GpioBase
-  {
-  public:
     using DataT = uint16_t;
-    enum { Width = 16 };
-    enum { id = ID };
-  private:
-    constexpr static inline GPIO_TypeDef* Regs()
-    {
-      return reinterpret_cast<GPIO_TypeDef*>(baseAddr);
-    }
-    static constexpr uint32_t Unpack2Bit(uint32_t mask, uint32_t config, uint32_t value = 0)
-    {
-      mask = (mask & 0xff00)     << 8 | (mask & 0x00ff);
-      mask = (mask & 0x00f000f0) << 4 | (mask & 0x000f000f);
-      mask = (mask & 0x0C0C0C0C) << 2 | (mask & 0x03030303);
-      mask = (mask & 0x22222222) << 1 | (mask & 0x11111111);
-      return (value & ~(mask*0x03)) | mask * config;
-    }
-    static constexpr uint32_t Unpack4Bit(uint32_t mask, uint32_t config, uint32_t value = 0)
-    {
-      mask = (mask & 0xf0) << 12 | (mask & 0x0f);
-      mask = (mask & 0x000C000C) << 6 | (mask & 0x00030003);
-      mask = (mask & 0x02020202) << 3 | (mask & 0x01010101);
-      return (value & ~(mask * 0x15)) | mask * config;
-    }
-  public:
-    static void Enable()
-    {
-      RCC->APB2ENR |= RCC_APB2ENR_IOPAEN << id;
-    }
-    //constant interface
-    template <DataT mask, Cfg config>
-    static void SetConfig()
-    {
-      if(mask & 0xFF) {
-        Regs()->CRL = Unpack4Bit(mask, config >> 1, Regs()->CRL);
-      }
-      constexpr DataT maskH = mask >> 8;
-      if(maskH) {
-        Regs()->CRH = Unpack4Bit(maskH, config >> 1, Regs()->CRH);
-      }
-    }
-    template <DataT mask, Cfg config>
-    static void WriteConfig()
-    {
-      Regs()->CRL = Unpack4Bit(mask, config >> 1);
-      constexpr DataT maskH = mask >> 8;
-      Regs()->CRH = Unpack4Bit(maskH, config >> 1);
-    }
-    template <DataT mask>
+    struct CR {
+      uint32_t crl;
+      uint32_t crh;
+    };
+    static constexpr size_t Width = 16;
 
-    static void Set()
+    template<typename... Args>
+    static constexpr uint32_t WriteConfigHelperL(DataT mask, Cfg config, Args... args)
     {
-      Regs()->BSRR = mask;
+      return (Utils::Unpack4Bit(mask) * (config >> 1)) | WriteConfigHelperL(args...);
     }
-    template <DataT mask>
-    static void Clear()
+    static constexpr uint32_t WriteConfigHelperL()
     {
-      Regs()->BRR = mask;
+      return 0;
     }
-    template<DataT clearmask, DataT setmask>
-    static void ClearAndSet()
+    template<typename... Args>
+    static constexpr uint32_t WriteConfigHelperH(DataT mask, Cfg config, Args... args)
     {
-      const DataT value = setmask & ~clearmask;
-      Regs()->ODR = value;
+      return (Utils::Unpack4Bit(mask >> 8) * (config >> 1)) | WriteConfigHelperH(args...);;
     }
-    template <DataT value>
-    static void Write()
+    static constexpr uint32_t WriteConfigHelperH()
     {
-      Regs()->ODR = value;
-    }
-    template <DataT mask>
-    static void Toggle()
-    {
-      Regs()->ODR ^= mask;
+      return 0;
     }
 
-    //normal interface
-    static void SetConfig(DataT mask, Cfg config)
+    template<typename... Args>
+    static constexpr CR EvalCR(DataT mask, Cfg config, Args... args)
     {
-      if(mask & 0xFF) {
-        Regs()->CRL = Unpack4Bit(mask, config >> 1, Regs()->CRL);
-      }
-      mask >>= 8;
-      if(mask) {
-        Regs()->CRH = Unpack4Bit(mask, config >> 1, Regs()->CRH);
-      }
-    }
-    static void WriteConfig(DataT mask, Cfg config)
-    {
-      Regs()->CRL = Unpack4Bit(mask, config >> 1);
-      mask >>= 8;
-      Regs()->CRH = Unpack4Bit(mask, config >> 1);
-    }
-    static void Set(DataT mask)
-    {
-      Regs()->BSRR = mask;
-    }
-    static void Clear(DataT mask)
-    {
-      Regs()->BRR = mask;
-    }
-    static void ClearAndSet(DataT clearmask, DataT setmask)
-    {
-      const DataT value = setmask & ~clearmask;
-      Regs()->ODR = value;
-    }
-    static void Write(DataT value)
-    {
-      Regs()->ODR = value;
-    }
-    static void Toggle(DataT mask)
-    {
-      Regs()->ODR ^= mask;
-    }
-    static DataT Read()
-    {
-      return Regs()->IDR;
-    }
-    static DataT ReadODR()
-    {
-      return Regs()->ODR;
+      return { WriteConfigHelperL(mask, config, args...), WriteConfigHelperH(mask, config, args...)};
     }
   };
+
+  namespace _impl {
+    using Utils::Unpack4Bit;
+
+    template <uintptr_t baseAddr, uint8_t ID>
+    class Gpio : GpioBase
+    {
+    public:
+      enum { id = ID };
+    private:
+      constexpr static inline GPIO_TypeDef* Regs()
+      {
+        return reinterpret_cast<GPIO_TypeDef*>(baseAddr);
+      }
+
+    public:
+      static void Enable()
+      {
+        RCC->APB2ENR |= RCC_APB2ENR_IOPAEN << id;
+      }
+
+      //constant interface
+
+      template <DataT mask, Cfg config>
+      static void SetConfig()
+      {
+        if(mask & 0xFF) {
+          constexpr uint32_t maskL = Unpack4Bit(mask);
+          Regs()->CRL = (Regs()->CRL & ~(maskL * 0x0F)) | maskL * (config >> 1);
+        }
+        if(mask >> 8) {
+          constexpr uint32_t maskH = Unpack4Bit(mask >> 8);
+          Regs()->CRH = (Regs()->CRH & ~(maskH * 0x0F)) | maskH * (config >> 1);
+        }
+      }
+      template <DataT mask, Cfg config>
+      static void WriteConfig()
+      {
+        Regs()->CRL = Unpack4Bit(mask) * (config >> 1);
+        Regs()->CRH = Unpack4Bit(mask >> 8) * (config >> 1);
+      }
+      template <DataT mask>
+      static void Set()
+      {
+        Regs()->BSRR = mask;
+      }
+      template <DataT mask>
+      static void Clear()
+      {
+        Regs()->BRR = mask;
+      }
+      template<DataT clearmask, DataT setmask>
+      static void ClearAndSet()
+      {
+        Regs()->ODR = setmask & ~clearmask;
+      }
+      template <DataT value>
+      static void Write()
+      {
+        Regs()->ODR = value;
+      }
+      template <DataT mask>
+      static void Toggle()
+      {
+        Regs()->ODR ^= mask;
+      }
+
+      //normal interface
+
+      static void SetConfig(DataT mask, Cfg config)
+      {
+        if(mask & 0xFF) {
+          uint32_t maskL = Unpack4Bit(mask);
+          Regs()->CRL = (Regs()->CRL & ~(maskL * 0x0F)) | maskL * (config >> 1);
+        }
+        uint32_t maskH = Unpack4Bit(mask >> 8);
+        if(mask >> 8) {
+          Regs()->CRH = (Regs()->CRH & ~(maskH * 0x0F)) | maskH * (config >> 1);
+        }
+      }
+      static void WriteConfig(DataT mask, Cfg config)
+      {
+        Regs()->CRL = Unpack4Bit(mask) * (config >> 1);
+        Regs()->CRH = Unpack4Bit(mask >> 8) * (config >> 1);
+      }
+      static void WriteConfig(CR reg)
+      {
+        Regs()->CRL = reg.crl;
+        Regs()->CRH = reg.crh;
+      }
+      static void Set(DataT mask)
+      {
+        Regs()->BSRR = mask;
+      }
+      static void Clear(DataT mask)
+      {
+        Regs()->BRR = mask;
+      }
+      static void ClearAndSet(DataT clearmask, DataT setmask)
+      {
+        const DataT value = setmask & ~clearmask;
+        Regs()->ODR = value;
+      }
+      static void Write(DataT value)
+      {
+        Regs()->ODR = value;
+      }
+      static void Toggle(DataT mask)
+      {
+        Regs()->ODR ^= mask;
+      }
+      static DataT Read()
+      {
+        return Regs()->IDR;
+      }
+      static DataT ReadODR()
+      {
+        return Regs()->ODR;
+      }
+    };
+
+  }//_impl
 
   struct GpioNull : GpioBase {
     using DataT = uint16_t;
@@ -243,7 +269,7 @@ namespace Mcudrv {
     PortEnable<Ports...>();
   }
 
-#define PORTDEF(x,y) typedef Gpio<GPIO##x##_BASE, y> Gpio##x
+#define PORTDEF(x,y) using Gpio##x = _impl::Gpio<GPIO##x##_BASE, y>
 
   PORTDEF(A, 0);
   PORTDEF(B, 1);
@@ -251,52 +277,57 @@ namespace Mcudrv {
   PORTDEF(D, 3);
   PORTDEF(E, 4);
 
-  template <typename Port_, uint16_t Mask_>
-  class TPin
-  {
-  public:
-    typedef Port_ Port;
-    enum {
-      mask = Mask_,
-      position = Utils::MaskToPosition<mask>::value,
-      port_id = Port::id
-    };
-    static const bool Exist = mask;
-    template <GpioBase::Cfg cfg>
-    static void SetConfig()
+  namespace _impl {
+
+    template <typename Port_, uint16_t Mask_>
+    class TPin
     {
-      Port::template SetConfig<mask, cfg>();
-    }
-    static void Set()
-    {
-      Port::template Set<mask>();
-    }
-    static void SetOrClear(bool cond)
-    {
-      if(cond) {
+    public:
+      typedef Port_ Port;
+      enum {
+        mask = Mask_,
+        position = Utils::MaskToPosition<mask>::value,
+        port_id = Port::id
+      };
+      static const bool Exist = mask;
+      template <GpioBase::Cfg cfg>
+      static void SetConfig()
+      {
+        Port::template SetConfig<mask, cfg>();
+      }
+      static void Set()
+      {
         Port::template Set<mask>();
       }
-      else {
+      static void SetOrClear(bool cond)
+      {
+        if(cond) {
+          Port::template Set<mask>();
+        }
+        else {
+          Port::template Clear<mask>();
+        }
+      }
+      static void Clear()
+      {
         Port::template Clear<mask>();
       }
-    }
-    static void Clear()
-    {
-      Port::template Clear<mask>();
-    }
-    static void Toggle()
-    {
-      Port::template Toggle<mask>();
-    }
-    static bool IsSet()
-    {
-      return Port::Read() & mask;
-    }
-    static bool IsODRSet()
-    {
-      return Port::ReadODR() & mask;
-    }
-  };
+      static void Toggle()
+      {
+        Port::template Toggle<mask>();
+      }
+      static bool IsSet()
+      {
+        return Port::Read() & mask;
+      }
+      static bool IsODRSet()
+      {
+        return Port::ReadODR() & mask;
+      }
+    };
+
+  } //_impl
+
 
   template<typename Pin>
   struct InvertedPin : public Pin {
@@ -319,28 +350,29 @@ namespace Mcudrv {
   };
 
 #define PINSDEF(x, y) \
-  			typedef TPin<Gpio##x, 0x0001> P##y##0;\
-            typedef TPin<Gpio##x, 0x0002> P##y##1;\
-            typedef TPin<Gpio##x, 0x0004> P##y##2;\
-            typedef TPin<Gpio##x, 0x0008> P##y##3;\
-            typedef TPin<Gpio##x, 0x0010> P##y##4;\
-            typedef TPin<Gpio##x, 0x0020> P##y##5;\
-            typedef TPin<Gpio##x, 0x0040> P##y##6;\
-            typedef TPin<Gpio##x, 0x0080> P##y##7;\
-            typedef TPin<Gpio##x, 0x0100> P##y##8;\
-            typedef TPin<Gpio##x, 0x0200> P##y##9;\
-            typedef TPin<Gpio##x, 0x0400> P##y##10;\
-            typedef TPin<Gpio##x, 0x0800> P##y##11;\
-            typedef TPin<Gpio##x, 0x1000> P##y##12;\
-            typedef TPin<Gpio##x, 0x2000> P##y##13;\
-            typedef TPin<Gpio##x, 0x4000> P##y##14;\
-            typedef TPin<Gpio##x, 0x8000> P##y##15;
+            using P##y##0  = _impl::TPin<Gpio##x, 0x0001>;\
+            using P##y##1  = _impl::TPin<Gpio##x, 0x0002>;\
+            using P##y##2  = _impl::TPin<Gpio##x, 0x0004>;\
+            using P##y##3  = _impl::TPin<Gpio##x, 0x0008>;\
+            using P##y##4  = _impl::TPin<Gpio##x, 0x0010>;\
+            using P##y##5  = _impl::TPin<Gpio##x, 0x0020>;\
+            using P##y##6  = _impl::TPin<Gpio##x, 0x0040>;\
+            using P##y##7  = _impl::TPin<Gpio##x, 0x0080>;\
+            using P##y##8  = _impl::TPin<Gpio##x, 0x0100>;\
+            using P##y##9  = _impl::TPin<Gpio##x, 0x0200>;\
+            using P##y##10 = _impl::TPin<Gpio##x, 0x0400>;\
+            using P##y##11 = _impl::TPin<Gpio##x, 0x0800>;\
+            using P##y##12 = _impl::TPin<Gpio##x, 0x1000>;\
+            using P##y##13 = _impl::TPin<Gpio##x, 0x2000>;\
+            using P##y##14 = _impl::TPin<Gpio##x, 0x4000>;\
+            using P##y##15 = _impl::TPin<Gpio##x, 0x8000>;
   PINSDEF(A, a)
   PINSDEF(B, b)
   PINSDEF(C, c)
   PINSDEF(D, d)
   PINSDEF(E, e)
-  typedef TPin<GpioNull, 0x0> Nullpin;
+
+  using Nullpin = _impl::TPin<GpioNull, 0x0>;
 
   enum {
     P0  = 0x0001,

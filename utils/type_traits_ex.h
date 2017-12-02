@@ -97,6 +97,22 @@ namespace Utils {
   struct MaskToPosition<0x00> {
     enum { value = 0 };
   };
+
+  static constexpr uint32_t Unpack2Bit(uint32_t mask)
+  {
+    mask = (mask & 0xff00)     << 8 | (mask & 0x00ff);
+    mask = (mask & 0x00f000f0) << 4 | (mask & 0x000f000f);
+    mask = (mask & 0x0C0C0C0C) << 2 | (mask & 0x03030303);
+    mask = (mask & 0x22222222) << 1 | (mask & 0x11111111);
+    return mask;
+  }
+  static constexpr uint32_t Unpack4Bit(uint32_t mask)
+  {
+    mask = (mask & 0xf0) << 12 | (mask & 0x0f);
+    mask = (mask & 0x000C000C) << 6 | (mask & 0x00030003);
+    mask = (mask & 0x02020202) << 3 | (mask & 0x01010101);
+    return mask;
+  }
 }
 
 #endif //TYPE_TRAITS_H
