@@ -29,9 +29,9 @@
 #include "chprintf.h"
 
 #include "wake_base.h"
+#include "display.h"
 #include "led_driver.h"
 #include "button_control.h"
-#include "display.h"
 
 using namespace Rtos;
 
@@ -39,10 +39,9 @@ using LedDriver = Wk::LedDriver<>;
 
 using ButtonControl = Wk::ButtonControl<LedDriver>;
 
-using Twi = Twis::SoftTwi<Mcudrv::Pb6, Mcudrv::Pb7>;
-using Disp = Mcudrv::ssd1306<Twi, Mcudrv::ssd1306_128x32>;
-
 static Wk::Wake<LedDriver> wake(UARTD1, 115200, GPIOA, 10);
+
+static Display disp;
 
 /*
  * Application entry point.
@@ -61,19 +60,10 @@ int main(void) {
   using namespace Mcudrv;
   GpioB::Enable();
   wake.Init();
-  Twi::Init();
-  Disp::Init();
-  Disp::Fill(Mcudrv::Color::Clear);
-  Disp::Puts2X("Hello ");
-  Disp::Puts2X(666);
-
-  BaseThread::sleep(S2ST(20));
-//  ButtonControl buttonControl{GPIOB, 10};
-  char a = 'a';
+  disp.Init();
+  ButtonControl buttonControl{GPIOB, 10};
   while (true) {
-    Disp::Putch2X(a++);
-    BaseThread::sleep(MS2ST(100));
-//    buttonControl.Update();
-//    BaseThread::sleep(buttonControl.GetUpdatePeriod());
+    buttonControl.Update();
+    BaseThread::sleep(buttonControl.GetUpdatePeriod());
   }
 }
