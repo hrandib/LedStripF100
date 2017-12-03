@@ -211,58 +211,12 @@ namespace Mcudrv {
       SetXY(x + (bmap.Width() * 2), y);
     }
 
-    static void Putch(uint8_t ch, const Font& font = Resources::font5x8)
+    static void ProcessSpecialChars(uint8_t ch, uint8_t charHeightInBytes, uint8_t charWidth, uint8_t charSpacing)
     {
       if(ch == '\r') {
         SetX(0);
         return;
       }
-      const uint8_t heightInBytes = font.Height() >> 3;
-      if(ch == '\n') {
-        SetY(y_ + heightInBytes);
-        return;
-      }
-      if(ch == '\b') {
-        SetX(x_ - font.Width() - (font.Width() >> 2));
-        return;
-      }
-      if(ch == ' ') {
-        Fill(x_, font.Width() + 1, y_, heightInBytes);
-        return;
-      }
-      //adjust height offset
-      int8_t diff = (int8_t)(prevFontHeight_ - heightInBytes);
-      if(diff) {
-        uint8_t ypos = y_;
-        if(diff < 0) { //current font bigger than previous
-          diff = -diff;
-          if(ypos >= diff) {
-            ypos -= diff;  //there is a place on top
-          }
-        }
-        else if(diff > 0) { //current font smaller than previous
-          ypos += diff;
-        }
-        SetY(ypos);
-        prevFontHeight_ = heightInBytes;
-      }
-      //end of line
-      if((Type::Max_X - x_) < font.Width()) {
-        SetXY(0, y_ + heightInBytes);
-      }
-      Draw(Bitmap(font[ch], font.Width(), font.Height()));
-      //Space between chars
-      Fill(x_, font.Width() >> 2, y_, heightInBytes);
-    }
-    static void Putch2X(uint8_t ch, const Font& font = Resources::font5x8)
-    {
-      if(ch == '\r') {
-        SetX(0);
-        return;
-      }
-      const uint8_t charHeightInBytes = font.Height() >> 2;
-      const uint8_t charWidth = font.Width() * 2;
-      const uint8_t charSpacing = font.Width() >> 1;
       if(ch == '\n') {
         SetY(y_ + charHeightInBytes);
         return;
@@ -275,7 +229,9 @@ namespace Mcudrv {
         Fill(x_, charWidth + 1, y_, charHeightInBytes);
         return;
       }
-      //adjust height offset
+    }
+    static void AdjustHeightOffset(uint8_t charHeightInBytes)
+    {
       int8_t diff = (int8_t)(prevFontHeight_ - charHeightInBytes);
       if(diff) {
         uint8_t ypos = y_;
@@ -291,6 +247,29 @@ namespace Mcudrv {
         SetY(ypos);
         prevFontHeight_ = charHeightInBytes;
       }
+    }
+    static void Putch(uint8_t ch, const Font& font = Resources::font5x8)
+    {
+      const uint8_t charHeightInBytes = font.Height() >> 3;
+      const uint8_t charWidth = font.Width();
+      const uint8_t charSpacing = font.Width() >> 2;
+      ProcessSpecialChars(ch, charHeightInBytes, charWidth, charSpacing);
+      AdjustHeightOffset(charHeightInBytes);
+      //end of line
+      if((Type::Max_X - x_) < charWidth) {
+        SetXY(0, y_ + charHeightInBytes);
+      }
+      Draw(Bitmap(font[ch], font.Width(), font.Height()));
+      //Space between chars
+      Fill(x_, charSpacing, y_, charHeightInBytes);
+    }
+    static void Putch2X(uint8_t ch, const Font& font = Resources::font5x8)
+    {
+      const uint8_t charHeightInBytes = font.Height() >> 2;
+      const uint8_t charWidth = font.Width() * 2;
+      const uint8_t charSpacing = font.Width() >> 1;
+      ProcessSpecialChars(ch, charHeightInBytes, charWidth, charSpacing);
+      AdjustHeightOffset(charHeightInBytes);
       //end of line
       if((Type::Max_X - x_) < charWidth) {
         SetXY(0, y_ + charHeightInBytes);
