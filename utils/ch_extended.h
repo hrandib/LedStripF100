@@ -30,6 +30,7 @@ namespace Rtos {
   using chibios_rt::BaseThread;
   using chibios_rt::ThreadReference;
   using chibios_rt::BaseStaticThread;
+  using chibios_rt::Mailbox;
 
   enum class Status {
     Success,
@@ -77,8 +78,12 @@ namespace Rtos {
       SysLockGuardFromISR lock;
       chThdResumeI(&ref_, msg);
     }
-
   };
-}
+
+  static inline void Sleep(systime_t interval)
+  {
+      chThdSleep(interval);
+  }
+}//Rtos
 
 #endif // CH_EXTENDED_H

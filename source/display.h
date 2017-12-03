@@ -20,50 +20,60 @@
  * SOFTWARE.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <cstdlib>
+#ifndef DISPLAY_H
+#define DISPLAY_H
 
 #include "ch_extended.h"
-#include "hal.h"
-#include "chprintf.h"
+#include "ssd1306.h"
 
-#include "wake_base.h"
-#include "display.h"
-#include "led_driver.h"
-#include "button_control.h"
+extern Rtos::Mailbox<int32_t, 4> dispMsgQueue;
 
-using namespace Rtos;
+class Display : public Rtos::BaseStaticThread<256>
+{
+private:
+  using Twi = Twis::SoftTwi<Mcudrv::Pb6, Mcudrv::Pb7>;
+  using Disp = Mcudrv::ssd1306<Twi, Mcudrv::ssd1306_128x32>;
 
-using LedDriver = Wk::LedDriver<>;
-
-using ButtonControl = Wk::ButtonControl<LedDriver>;
-
-static Wk::Wake<LedDriver> wake(UARTD1, 115200, GPIOA, 10);
-
-static Display disp;
-
-/*
- * Application entry point.
- */
-int main(void) {
-
-  /*
-   * System initializations.
-   * - HAL initialization, this also initializes the configured device drivers
-   *   and performs the board-specific initializations.
-   * - Kernel initialization, the main() function becomes a thread and the
-   *   RTOS is active.
-   */
-  halInit();
-  System::init();
-  using namespace Mcudrv;
-  GpioB::Enable();
-  wake.Init();
-  disp.Init();
-  ButtonControl buttonControl{GPIOB, 10};
-  while (true) {
-    buttonControl.Update();
-    BaseThread::sleep(buttonControl.GetUpdatePeriod());
+  void DisplayCurrent(int32_t val)
+  {
+    char buf[8];
+    io::utoa16((uint16_t)val, (uint8_t*)buf);
+    Disp::Puts2X(buf, Mcudrv::Resources::font10x16);
+    Disp::Puts2X("mA");
   }
-}
+  void DisplayBrightness(int32_t val)
+  {
+    char buf[8];
+    buf[0] = ' ';
+    io::utoa16((uint16_t)val, (uint8_t*)&buf[1]);
+    Disp::Puts2X(buf, Mcudrv::Resources::font10x16);
+    Disp::Puts2X("%");
+  }
+public:
+  void Init()
+  {
+    Twi::Init();
+    Disp::Init();
+    Disp::Fill();
+    Disp::SetContrast(10);
+    start(HIGHPRIO - 1);
+  }
+  void main() final
+  {
+    int32_t value;
+    while(true) {
+      msg_t result = dispMsgQueue.fetch(&value, S2ST(20));
+      Disp::Fill();
+      if(result == MSG_OK) {
+        if(value < 0) {
+          DisplayCurrent(-value);
+        }
+        else {
+          DisplayBrightness(value);
+        }
+      }
+    }
+  }
+};
+
+#endif // DISPLAY_H

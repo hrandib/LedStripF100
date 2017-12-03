@@ -58,6 +58,9 @@ CppApplication
     "board",
     "utils",
     "wake",
+    "resources",
+    "drivers",
+    "source",
     //Startup
     ChibiOS + "os/common/startup/ARMCMx/compilers/GCC",
     ChibiOS + "os/common/startup/ARMCMx/devices/STM32F1xx",
@@ -145,6 +148,9 @@ CppApplication
     prefix: "utils/"
     files: [
       "ch_extended.h",
+      "string_utils.h",
+      "string_utils.cpp",
+      "type_traits_ex.h"
     ]
   }
 
@@ -171,6 +177,14 @@ CppApplication
     ]
   }
   Group { name: "Drivers"
+    prefix: "drivers/"
+    files: [
+      "gpio.h",
+      "i2c_fallback.h",
+      "ssd1306.h"
+    ]
+  }
+  Group { name: "Drivers ChibiOS"
     prefix: ChibiOS + "os/hal/ports/STM32/"
 //TODO: Remove unnecessary
     files: [
@@ -247,7 +261,10 @@ CppApplication
 	}
   Group {	name: "Main"
     files: [
-      "main.cpp"
+      "main.cpp",
+      "source/button_control.h",
+      "source/display.cpp",
+      "source/display.h",
     ]
     excludeFiles: [
 			"**/*_res.c",
@@ -275,6 +292,13 @@ CppApplication
       "streams/memstreams.c",
       "streams/nullstreams.h",
       "streams/nullstreams.c"
+    ]
+  }
+  Group { name: "Resources"
+    prefix: "resources/"
+    files: [
+      "fonts.h",
+      "fonts.cpp",
     ]
   }
   Group { name: "Test"
@@ -312,8 +336,7 @@ CppApplication
       "rt/source/test/test_sequence_013.c",
     ]
   }
-	Rule
-	{
+  Rule {
 		id: size
 		inputs: ["application"]
 		Artifact {
