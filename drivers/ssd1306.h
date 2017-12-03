@@ -114,7 +114,7 @@ namespace Mcudrv {
     }
     static void SetContrast(uint8_t con)
     {
-      uint8_t seq[3] = { CtrlCmdStream, CmdSetContrast, con & 0x7F };
+      uint8_t seq[3] = { CtrlCmdStream, CmdSetContrast, uint8_t(con & 0x7F) };
       Twi::Write(BaseAddr, seq, sizeof(seq));
     }
     static void SetX(uint8_t x)
@@ -211,24 +211,27 @@ namespace Mcudrv {
       SetXY(x + (bmap.Width() * 2), y);
     }
 
-    static void ProcessSpecialChars(uint8_t ch, uint8_t charHeightInBytes, uint8_t charWidth, uint8_t charSpacing)
+    static bool ProcessSpecialChars(uint8_t ch, uint8_t charHeightInBytes, uint8_t charWidth, uint8_t charSpacing)
     {
-      if(ch == '\r') {
+      switch(ch) {
+      case '\r':
         SetX(0);
-        return;
-      }
-      if(ch == '\n') {
+        break;
+      case '\n':
         SetY(y_ + charHeightInBytes);
-        return;
-      }
-      if(ch == '\b') {
+        break;
+      case '\b':
         SetX(x_ - (charWidth + charSpacing));
-        return;
+        break;
+      case ' ':
+        Fill(x_, charWidth, y_, charHeightInBytes);
+        break;
+       default:
+        //not processed
+        return false;
       }
-      if(ch == ' ') {
-        Fill(x_, charWidth + 1, y_, charHeightInBytes);
-        return;
-      }
+      //processed
+      return true;
     }
     static void AdjustHeightOffset(uint8_t charHeightInBytes)
     {
@@ -268,7 +271,9 @@ namespace Mcudrv {
       const uint8_t charHeightInBytes = font.Height() >> 2;
       const uint8_t charWidth = font.Width() * 2;
       const uint8_t charSpacing = font.Width() >> 1;
-      ProcessSpecialChars(ch, charHeightInBytes, charWidth, charSpacing);
+      if(ProcessSpecialChars(ch, charHeightInBytes, charWidth, charSpacing)) {
+        return;
+      }
       AdjustHeightOffset(charHeightInBytes);
       //end of line
       if((Type::Max_X - x_) < charWidth) {
@@ -279,26 +284,18 @@ namespace Mcudrv {
       Fill(x_, charSpacing, y_, charHeightInBytes);
     }
 
-    static void Puts(const uint8_t* str, const Font& font = Resources::font5x8)
+    static void Puts(const char* str, const Font& font = Resources::font5x8)
     {
       while(*str) {
         Putch(*str++, font);
       }
     }
-    static void Puts(const char* s)
-    {
-      Puts((const uint8_t*)s);
-    }
 
-    static void Puts2X(const uint8_t* str, const Font& font = Resources::font5x8)
+    static void Puts2X(const char* str, const Font& font = Resources::font5x8)
     {
       while(*str) {
         Putch2X(*str++, font);
       }
-    }
-    static void Puts2X(const char* s)
-    {
-      Puts2X((const uint8_t*)s);
     }
 
     template<typename T>
