@@ -172,6 +172,43 @@ namespace Mcudrv {
       }
       SetXY(x + bmap.Width(), y);
     }
+    static void Draw2X(const Bitmap& bmap, uint8_t x = x_, uint8_t y = y_)
+    {
+      uint8_t buf[20];
+      uint8_t bufIndex{};
+      for(uint8_t ypos = 0; ypos < (bmap.Height() >> 3); ++ypos) {
+        SetXY(x, y + (ypos * 2));
+        Twi::WriteNoStop(BaseAddr, CtrlDataStream);
+        for(uint8_t x = 0; x < bmap.Width(); ++x) {
+          uint8_t data = bmap[x + bmap.Width() * ypos];
+          uint8_t temp_data{};
+          for(uint8_t i{}; i < 4; ++i) {
+            if(data & (1 << i)) {
+              temp_data |= (3 << (i * 2));
+            }
+          }
+          buf[bufIndex] = 0;
+          for(uint8_t i = 4; i < 8; ++i) {
+            if(data & (1 << i)) {
+              buf[bufIndex] |= (3 << ((i - 4) * 2));
+            }
+          }
+          ++bufIndex;
+          Twi::WriteByte(temp_data);
+          Twi::WriteByte(temp_data);
+        }
+        bufIndex = 0;
+        Twi::Stop();
+        SetXY(x, y + (ypos * 2) + 1);
+        Twi::WriteNoStop(BaseAddr, CtrlDataStream);
+        for(uint8_t x = 0; x < bmap.Width(); ++x) {
+          Twi::WriteByte(buf[x]);
+          Twi::WriteByte(buf[x]);
+        }
+        Twi::Stop();
+      }
+      SetXY(x + (bmap.Width() * 2), y);
+    }
     static void Putch(uint8_t ch, const Font& font = Resources::font5x8)
     {
       if(ch == '\r') {
