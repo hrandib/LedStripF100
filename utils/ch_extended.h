@@ -30,6 +30,7 @@ namespace Rtos {
   using chibios_rt::BaseThread;
   using chibios_rt::ThreadReference;
   using chibios_rt::BaseStaticThread;
+  using chibios_rt::Mailbox;
 
   enum class Status {
     Success,
