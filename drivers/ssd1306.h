@@ -40,7 +40,8 @@ namespace Mcudrv {
     };
   protected:
     enum {
-      CmdComPinMapValue = 0x12
+      CmdComPinMapValue = 0x12,
+      CmdMuxRatioValue = 0x3F
     };
   };
   struct ssd1306_128x32
@@ -51,7 +52,8 @@ namespace Mcudrv {
     };
   protected:
     enum {
-      CmdComPinMapValue = 0x02
+      CmdComPinMapValue = 0x02,
+      CmdMuxRatioValue = 0x1F
     };
   };
 
@@ -60,7 +62,10 @@ namespace Mcudrv {
   class ssd1306 : Twi, public Type
   {
   private:
-    enum { BaseAddr = 0x3C };
+    enum {
+      BaseAddr = 0x3C,
+      MaxYpages = Type::Max_Y >> 3
+    };
     enum ControlByte {
       CtrlCmdSingle = 0x80,
       CtrlCmdStream = 0x00,
@@ -100,7 +105,7 @@ namespace Mcudrv {
 
       CmdChargePump = 0x8D  //with followed by 0x14(internal gen) or 0x10(external gen)
     };
-    static const uint8_t initSequence[26];
+    static const uint8_t initSequence[24];
     static uint8_t x_, y_;
   public:
     static void Init()
@@ -122,7 +127,7 @@ namespace Mcudrv {
     }
     static void SetY(uint8_t y)
     {
-      const uint8_t seq[] = { CtrlCmdSingle, uint8_t(CmdSetPageStart | (y & 0x07))};
+      const uint8_t seq[] = { CtrlCmdSingle, uint8_t(CmdSetPageStart | (y & MaxYpages))};
       Twi::Write(BaseAddr, seq, sizeof(seq));
       y_ = y;
     }
@@ -133,9 +138,9 @@ namespace Mcudrv {
     }
     static void Fill(const Color color = Resources::Clear)
     {
-      for(uint8_t y = 0; y < 8; ++y) {
+      for(uint8_t y = 0; y <= MaxYpages; ++y) {
         SetXY(0, y);
-        Twi::Write(BaseAddr, CtrlDataStream, Twis::NoStop);
+        Twi::WriteNoStop(BaseAddr, CtrlDataStream);
         for(uint8_t x = 0; x < 128; ++x) {
           Twi::WriteByte(color);
         }
@@ -147,7 +152,7 @@ namespace Mcudrv {
     {
       for(uint8_t ypos = 0; ypos < yRange; ++ypos) {
         SetXY(x, y + ypos);
-        Twi::Write(BaseAddr, CtrlDataStream, Twis::NoStop);
+        Twi::WriteNoStop(BaseAddr, CtrlDataStream);
         for(uint8_t xpos = 0; xpos < xRange; ++xpos) {
           Twi::WriteByte(color);
         }
@@ -159,7 +164,7 @@ namespace Mcudrv {
     {
       for(uint8_t ypos = 0; ypos < (bmap.Height() >> 3); ++ypos) {
         SetXY(x, y + ypos);
-        Twi::Write(BaseAddr, CtrlDataStream, Twis::NoStop);
+        Twi::WriteNoStop(BaseAddr, CtrlDataStream);
         for(uint8_t x = 0; x < bmap.Width(); ++x) {
           Twi::WriteByte(bmap[x + bmap.Width() * ypos]);
         }
@@ -205,7 +210,7 @@ namespace Mcudrv {
       }
       //end of line
       if((Type::Max_X - x_) < font.Width()) {
-        SetXY(0, (y_ + heightInBytes) & 0x07);
+        SetXY(0, y_ + heightInBytes);
       }
       Draw(Bitmap(font[ch], font.Width(), font.Height()));
       //Space between chars
@@ -235,12 +240,11 @@ namespace Mcudrv {
   template<typename Twi, typename Type>
   const uint8_t ssd1306<Twi, Type>::initSequence[] = { CtrlCmdStream,
                                                  CmdSetColRange, 0x00, 0x7F,
-                                                 CmdSetPageRange, 0x00, 0x07,
+                                              //  CmdSetPageRange, 0x00, 0x07,
                                                  CmdDisplayOff,  //default
-                                                 //      CmdClkDiv, 0x80,    //default = 0x80
-                                                 //      CmdMuxRatio, 0x3F,    //default = 0x3F
-                                                 //      CmdDisplayOffset, 0x00, //default = 0
-                                                 CmdMuxRatio, 0x3F,
+                                              //  CmdClkDiv, 0x80,    //default = 0x80
+                                              //  CmdDisplayOffset, 0x00, //default = 0
+                                                 CmdMuxRatio, Type::CmdMuxRatioValue,
                                                  CmdChargePump, 0x14,
                                                  CmdMemAddrMode, ModePage, //default = 0x02 (Page)
                                                  CmdSegmentRemap,
