@@ -26,6 +26,8 @@
 #include "hal.h"
 #include "wake_base.h"
 
+extern Rtos::Mailbox<int32_t, 4> dispMsgQueue;
+
 namespace Wk {
 
   static constexpr uint8_t MAX_BRIGHTNESS_VALUE = 100;
@@ -94,6 +96,7 @@ public:
     if(val > MAX_BRIGHTNESS_VALUE) {
       val = MAX_BRIGHTNESS_VALUE;
     }
+    dispMsgQueue.post(val, TIME_IMMEDIATE);
     chVTSet(&changeVt_, MS2ST(BRIGHTNESS_CHANGE_STEP_TIME), ChangeCb, (void*)(uint32_t)val);
   }
   static uint8_t GetBrightness() {
