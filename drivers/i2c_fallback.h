@@ -177,7 +177,8 @@ namespace Twis {
       Scl::Set();
       Delay();
     }
-    static AckState Write(uint8_t addr, const uint8_t* buf, uint8_t length, bool noStop = false)
+
+    static AckState WriteNoStop(uint8_t addr, const uint8_t* buf, uint8_t length)
     {
       Start();
       AckState state = WriteByte(addr << 1);
@@ -191,25 +192,34 @@ namespace Twis {
           state = Ack;
         }
       }
-      if(!noStop) {
-        Stop();
-      }
       return state;
     }
-    static AckState Write(const uint8_t* buf, uint8_t length, bool noStop = false) //length of data (except address)
-    {
-      return Write(*buf, buf + 1, length, noStop);
+    static AckState Write(uint8_t addr, const uint8_t* buf, uint8_t length) {
+      auto state = WriteNoStop(addr, buf, length);
+      Stop();
+      return state;
     }
-    static AckState Write(uint8_t addr, uint8_t data, bool noStop = false)
+    static AckState WriteNoStop(const uint8_t* buf, uint8_t length) //length of data (except address)
+    {
+      return WriteNoStop(*buf, buf + 1, length);
+    }
+    static AckState Write(const uint8_t* buf, uint8_t length) //length of data (except address)
+    {
+      return Write(*buf, buf + 1, length);
+    }
+    static AckState WriteNoStop(uint8_t addr, uint8_t data)
     {
       Start();
       AckState state = NoAck;
       if(WriteByte(addr << 1U) == Ack && WriteByte(data) == Ack) {
         state = Ack;
       }
-      if(!noStop) {
-        Stop();
-      }
+      return state;
+    }
+    static AckState Write(uint8_t addr, uint8_t data)
+    {
+      auto state = WriteNoStop(addr, data);
+      Stop();
       return state;
     }
     static bool Read(uint8_t addr, uint8_t* buf, uint8_t length)
