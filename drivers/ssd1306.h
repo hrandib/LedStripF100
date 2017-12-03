@@ -106,7 +106,7 @@ namespace Mcudrv {
       CmdChargePump = 0x8D  //with followed by 0x14(internal gen) or 0x10(external gen)
     };
     static const uint8_t initSequence[24];
-    static uint8_t x_, y_;
+    static uint8_t x_, y_, prevFontHeight_;
   public:
     static void Init()
     {
@@ -174,7 +174,8 @@ namespace Mcudrv {
     }
     static void Draw2X(const Bitmap& bmap, uint8_t x = x_, uint8_t y = y_)
     {
-      uint8_t buf[20];
+      //buf size should as bigger as width of the biggest font
+      uint8_t buf[10];
       uint8_t bufIndex{};
       for(uint8_t ypos = 0; ypos < (bmap.Height() >> 3); ++ypos) {
         SetXY(x, y + (ypos * 2));
@@ -209,6 +210,7 @@ namespace Mcudrv {
       }
       SetXY(x + (bmap.Width() * 2), y);
     }
+
     static void Putch(uint8_t ch, const Font& font = Resources::font5x8)
     {
       if(ch == '\r') {
@@ -229,8 +231,7 @@ namespace Mcudrv {
         return;
       }
       //adjust height offset
-      static uint8_t prevHeight = Resources::font5x8.Height() >> 3;
-      int8_t diff = (int8_t)(prevHeight - heightInBytes);
+      int8_t diff = (int8_t)(prevFontHeight_ - heightInBytes);
       if(diff) {
         uint8_t ypos = y_;
         if(diff < 0) { //current font bigger than previous
@@ -243,7 +244,7 @@ namespace Mcudrv {
           ypos += diff;
         }
         SetY(ypos);
-        prevHeight = heightInBytes;
+        prevFontHeight_ = heightInBytes;
       }
       //end of line
       if((Type::Max_X - x_) < font.Width()) {
@@ -253,6 +254,52 @@ namespace Mcudrv {
       //Space between chars
       Fill(x_, font.Width() >> 2, y_, heightInBytes);
     }
+    static void Putch2X(uint8_t ch, const Font& font = Resources::font5x8)
+    {
+      if(ch == '\r') {
+        SetX(0);
+        return;
+      }
+      const uint8_t charHeightInBytes = font.Height() >> 2;
+      const uint8_t charWidth = font.Width() * 2;
+      const uint8_t charSpacing = font.Width() >> 1;
+      if(ch == '\n') {
+        SetY(y_ + charHeightInBytes);
+        return;
+      }
+      if(ch == '\b') {
+        SetX(x_ - (charWidth + charSpacing));
+        return;
+      }
+      if(ch == ' ') {
+        Fill(x_, charWidth + 1, y_, charHeightInBytes);
+        return;
+      }
+      //adjust height offset
+      int8_t diff = (int8_t)(prevFontHeight_ - charHeightInBytes);
+      if(diff) {
+        uint8_t ypos = y_;
+        if(diff < 0) { //current font bigger than previous
+          diff = -diff;
+          if(ypos >= diff) {
+            ypos -= diff;  //there is a place on top
+          }
+        }
+        else if(diff > 0) { //current font smaller than previous
+          ypos += diff;
+        }
+        SetY(ypos);
+        prevFontHeight_ = charHeightInBytes;
+      }
+      //end of line
+      if((Type::Max_X - x_) < charWidth) {
+        SetXY(0, y_ + charHeightInBytes);
+      }
+      Draw2X(Bitmap(font[ch], font.Width(), font.Height()));
+      //Space between chars
+      Fill(x_, charSpacing, y_, charHeightInBytes);
+    }
+
     static void Puts(const uint8_t* str, const Font& font = Resources::font5x8)
     {
       while(*str) {
@@ -263,17 +310,37 @@ namespace Mcudrv {
     {
       Puts((const uint8_t*)s);
     }
+
+    static void Puts2X(const uint8_t* str, const Font& font = Resources::font5x8)
+    {
+      while(*str) {
+        Putch2X(*str++, font);
+      }
+    }
+    static void Puts2X(const char* s)
+    {
+      Puts2X((const uint8_t*)s);
+    }
+
     template<typename T>
     static void Puts(T value, uint8_t base = 10)
     {
       uint8_t buf[16];
       Puts(io::xtoa(value, buf, base));
     }
+    template<typename T>
+    static void Puts2X(T value, uint8_t base = 10)
+    {
+      uint8_t buf[16];
+      Puts2X(io::xtoa(value, buf, base));
+    }
   };
   template<typename Twi, typename Type>
   uint8_t ssd1306<Twi, Type>::x_;
   template<typename Twi, typename Type>
   uint8_t  ssd1306<Twi, Type>::y_;
+  template<typename Twi, typename Type>
+  uint8_t  ssd1306<Twi, Type>::prevFontHeight_ = 1;
   template<typename Twi, typename Type>
   const uint8_t ssd1306<Twi, Type>::initSequence[] = { CtrlCmdStream,
                                                  CmdSetColRange, 0x00, 0x7F,
