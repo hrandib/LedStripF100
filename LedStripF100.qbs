@@ -265,6 +265,8 @@ CppApplication
       "source/button_control.h",
       "source/display.cpp",
       "source/display.h",
+      "source/measure.cpp",
+      "source/measure.h",
     ]
     excludeFiles: [
 			"**/*_res.c",
