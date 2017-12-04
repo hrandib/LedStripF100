@@ -32,6 +32,7 @@
 #include "display.h"
 #include "led_driver.h"
 #include "button_control.h"
+#include "measure.h"
 
 using namespace Rtos;
 

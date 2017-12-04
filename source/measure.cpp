@@ -20,3 +20,6 @@
  * SOFTWARE.
  */
 #include "measure.h"
+
+adcsample_t Measure::samples[channelsNum * bufDepth];
+Rtos::Mailbox<int32_t, 4> Measure::adcMeasQueue;

@@ -27,17 +27,53 @@
 
 extern Rtos::Mailbox<int32_t, 4> dispMsgQueue;
 
+//only one instance is allowed
 class Measure : public Rtos::BaseStaticThread<256>
 {
 private:
+  static constexpr size_t channelsNum = 1;
+  static constexpr size_t bufDepth = 16;
+  static adcsample_t samples[channelsNum * bufDepth];
+  static Rtos::Mailbox<int32_t, 4> adcMeasQueue;
+
+  const ADCConversionGroup adcGroupCfg = {
+    true, //is circular
+    channelsNum,
+    AdcCb,
+    nullptr, //ERR cb
+    0, 0,                         /* CR1, CR2 */
+    0,                            /* SMPR1 */
+    ADC_SMPR2_SMP_AN4(ADC_SAMPLE_239P5),
+    ADC_SQR1_NUM_CH(channelsNum),
+    0,                            /* SQR2 */
+    ADC_SQR3_SQ1_N(ADC_CHANNEL_IN4)
+  };
+
+  static void AdcCb(ADCDriver* /*adcp*/, adcsample_t* buffer, size_t n) {
+    int32_t result{};
+    if(buffer == samples) while(n) {
+      result += buffer[--n];
+    }
+    Rtos::SysLockGuardFromISR lock;
+    adcMeasQueue.postI(result);
+  }
 
 public:
   void Init()
   {
-
+    palSetPadMode(GPIOA, 4, PAL_MODE_INPUT_ANALOG);
+    adcStart(&ADCD1, nullptr);
+    adcStartConversion(&ADCD1, &adcGroupCfg, samples, bufDepth);
   }
   void main() final
   {
+    while(true) {
+      int32_t result;
+      msg_t status = adcMeasQueue.fetch(&result, TIME_INFINITE);
+      if(status == MSG_OK) {
+        (void)result;
+      }
+    }
 
   }
 

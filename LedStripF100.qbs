@@ -26,7 +26,8 @@ CppApplication
     //TODO: Remove editor helpers
     "TRUE=1",
     "FALSE=0",
-    "HAL_USE_UART"
+    "HAL_USE_UART",
+    "HAL_USE_ADC",
 	]
   cpp.driverFlags: [
 		"-mcpu=cortex-m3",
