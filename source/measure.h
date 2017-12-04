@@ -22,4 +22,25 @@
 #ifndef MEASURE_H
 #define MEASURE_H
 
+#include "hal.h"
+#include "ch_extended.h"
+
+extern Rtos::Mailbox<int32_t, 4> dispMsgQueue;
+
+class Measure : public Rtos::BaseStaticThread<256>
+{
+private:
+
+public:
+  void Init()
+  {
+
+  }
+  void main() final
+  {
+
+  }
+
+};
+
 #endif // MEASURE_H
