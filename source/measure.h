@@ -25,6 +25,9 @@
 #include "hal.h"
 #include "ch_extended.h"
 
+#include <numeric>
+#include <iterator>
+
 extern Rtos::Mailbox<int32_t, 4> dispMsgQueue;
 
 //only one instance is allowed
@@ -51,7 +54,7 @@ private:
 
   static void AdcCb(ADCDriver* /*adcp*/, adcsample_t* buffer, size_t n) {
     int32_t result{};
-    if(buffer == samples) while(n) {
+    while(n) {
       result += buffer[--n];
     }
     Rtos::SysLockGuardFromISR lock;
@@ -64,14 +67,28 @@ public:
     palSetPadMode(GPIOA, 4, PAL_MODE_INPUT_ANALOG);
     adcStart(&ADCD1, nullptr);
     adcStartConversion(&ADCD1, &adcGroupCfg, samples, bufDepth);
+    start(NORMALPRIO);
   }
   void main() final
   {
+    uint16_t maBuf[8] = {};
+    size_t maIndex{};
+    systime_t time = Rtos::System::getTime();
+    dispMsgQueue.post(-(int32_t)time, TIME_INFINITE);
     while(true) {
       int32_t result;
       msg_t status = adcMeasQueue.fetch(&result, TIME_INFINITE);
       if(status == MSG_OK) {
-        (void)result;
+        maBuf[maIndex++] = (uint16_t)result;
+        if(maIndex == sizeof(maBuf)) {
+          maIndex = 0;
+        }
+        auto now = Rtos::System::getTime();
+        if(time + S2ST(1) < now) {
+          time = now;
+          auto result = std::accumulate(std::begin(maBuf), std::end(maBuf), 0) / (int32_t)sizeof(maBuf);
+          dispMsgQueue.post(-result, TIME_INFINITE);
+        }
       }
     }
 

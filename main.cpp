@@ -43,7 +43,7 @@ using ButtonControl = Wk::ButtonControl<LedDriver>;
 static Wk::Wake<LedDriver> wake(UARTD1, 115200, GPIOA, 10);
 
 static Display disp;
-
+static Measure meas;
 /*
  * Application entry point.
  */
@@ -62,6 +62,7 @@ int main(void) {
   GpioB::Enable();
   wake.Init();
   disp.Init();
+  meas.Init();
   ButtonControl buttonControl{GPIOB, 10};
   while (true) {
     buttonControl.Update();
