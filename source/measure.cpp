@@ -21,5 +21,18 @@
  */
 #include "measure.h"
 
+const ADCConversionGroup Measure::adcGroupCfg = {
+  false, //is circular
+  channelsNum,
+  AdcCb,
+  nullptr, //ERR cb
+  0, 0,                         /* CR1, CR2 */
+  0,                            /* SMPR1 */
+  ADC_SMPR2_SMP_AN4(ADC_SAMPLE_239P5),
+  ADC_SQR1_NUM_CH(channelsNum),
+  0,                            /* SQR2 */
+  ADC_SQR3_SQ1_N(ADC_CHANNEL_IN4)
+};
+
 adcsample_t Measure::samples[channelsNum * bufDepth];
-Rtos::Mailbox<int32_t, 4> Measure::adcMeasQueue;
+virtual_timer_t Measure::convertVt;
