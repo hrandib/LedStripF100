@@ -34,7 +34,7 @@ extern Rtos::Mailbox<int32_t, 4> dispMsgQueue;
 class Measure
 {
 private:
-  static constexpr size_t samplingTime = MS2ST(100);
+  static constexpr size_t samplingTime = S2ST(1);
   static constexpr size_t channelsNum = 1;
   static constexpr size_t bufDepth = 16;
   static adcsample_t samples[channelsNum * bufDepth];
@@ -43,7 +43,7 @@ private:
 
   static int32_t ConvertTomA(int32_t value)
   {
-    return value / 20;
+    return ((value * 4) / 90) + 40;
   }
   static void AdcCb(ADCDriver* /*adcp*/, adcsample_t* buffer, size_t n) {
     int32_t result{};
@@ -51,7 +51,7 @@ private:
       result += buffer[--n];
     }
     result = ConvertTomA(result);
-    if(result > 20) {
+    if(result > 41) {
       Rtos::SysLockGuardFromISR lock;
       dispMsgQueue.postI(-result);
     }
