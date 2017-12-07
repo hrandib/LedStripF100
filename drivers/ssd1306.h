@@ -224,7 +224,7 @@ namespace Mcudrv {
         SetX(x_ - (charWidth + charSpacing));
         break;
       case ' ':
-        Fill(x_, charWidth, y_, charHeightInBytes);
+        Fill(x_, charWidth + charSpacing, y_, charHeightInBytes);
         break;
        default:
         //not processed
