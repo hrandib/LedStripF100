@@ -297,19 +297,6 @@ namespace Mcudrv {
         Putch2X(*str++, font);
       }
     }
-
-    template<typename T>
-    static void Puts(T value, uint8_t base = 10)
-    {
-      uint8_t buf[16];
-      Puts(io::xtoa(value, buf, base));
-    }
-    template<typename T>
-    static void Puts2X(T value, uint8_t base = 10)
-    {
-      uint8_t buf[16];
-      Puts2X(io::xtoa(value, buf, base));
-    }
   };
   template<typename Twi, typename Type>
   uint8_t ssd1306<Twi, Type>::x_;
