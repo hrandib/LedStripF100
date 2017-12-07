@@ -26,7 +26,8 @@ CppApplication
     //TODO: Remove editor helpers
     "TRUE=1",
     "FALSE=0",
-    "HAL_USE_UART"
+    "HAL_USE_UART",
+    "HAL_USE_ADC",
 	]
   cpp.driverFlags: [
 		"-mcpu=cortex-m3",
@@ -265,6 +266,8 @@ CppApplication
       "source/button_control.h",
       "source/display.cpp",
       "source/display.h",
+      "source/measure.cpp",
+      "source/measure.h",
     ]
     excludeFiles: [
 			"**/*_res.c",

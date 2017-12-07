@@ -19,53 +19,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-#include <stdio.h>
-#include <string.h>
-#include <cstdlib>
-
-#include "ch_extended.h"
-#include "hal.h"
-#include "chprintf.h"
-
-#include "wake_base.h"
-#include "display.h"
-#include "led_driver.h"
-#include "button_control.h"
 #include "measure.h"
 
-using namespace Rtos;
+const ADCConversionGroup Measure::adcGroupCfg = {
+  false, //is circular
+  channelsNum,
+  AdcCb,
+  nullptr, //ERR cb
+  0, 0,                         /* CR1, CR2 */
+  0,                            /* SMPR1 */
+  ADC_SMPR2_SMP_AN4(ADC_SAMPLE_239P5),
+  ADC_SQR1_NUM_CH(channelsNum),
+  0,                            /* SQR2 */
+  ADC_SQR3_SQ1_N(ADC_CHANNEL_IN4)
+};
 
-using LedDriver = Wk::LedDriver<>;
-
-using ButtonControl = Wk::ButtonControl<LedDriver>;
-
-static Wk::Wake<LedDriver> wake(UARTD1, 115200, GPIOA, 10);
-
-static Display disp;
-static Measure meas;
-/*
- * Application entry point.
- */
-int main(void) {
-
-  /*
-   * System initializations.
-   * - HAL initialization, this also initializes the configured device drivers
-   *   and performs the board-specific initializations.
-   * - Kernel initialization, the main() function becomes a thread and the
-   *   RTOS is active.
-   */
-  halInit();
-  System::init();
-  using namespace Mcudrv;
-  GpioB::Enable();
-  wake.Init();
-  disp.Init();
-  meas.Init();
-  ButtonControl buttonControl{GPIOB, 10};
-  while (true) {
-    buttonControl.Update();
-    BaseThread::sleep(buttonControl.GetUpdatePeriod());
-  }
-}
+adcsample_t Measure::samples[channelsNum * bufDepth];
+virtual_timer_t Measure::convertVt;
