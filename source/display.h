@@ -47,8 +47,14 @@ private:
   void DisplayBrightness(int32_t val)
   {
     char buf[8];
-    buf[0] = ' ';
-    io::utoa16((uint16_t)val, (uint8_t*)&buf[1]);
+    if(val < 10) {
+      Disp::Putch2X(' ', Mcudrv::Resources::font10x16);
+    }
+    if(val < 100) {
+      Disp::Putch2X(' ', Mcudrv::Resources::font10x16);
+    }
+    Disp::Putch2X(' ', Mcudrv::Resources::font10x16);
+    io::utoa16((uint16_t)val, (uint8_t*)buf);
     Disp::Puts2X(buf, Mcudrv::Resources::font10x16);
     Disp::Puts2X("%");
   }
@@ -66,7 +72,7 @@ public:
     int32_t value;
     while(true) {
       msg_t result = dispMsgQueue.fetch(&value, S2ST(20));
-      Disp::Fill();
+      Disp::SetXY(0, 0);
       if(result == MSG_OK) {
         if(value < 0) {
           DisplayCurrent(-value);
@@ -74,6 +80,9 @@ public:
         else {
           DisplayBrightness(value);
         }
+      }
+      else {
+        Disp::Fill();
       }
     }
   }
