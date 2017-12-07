@@ -37,9 +37,12 @@ private:
   void DisplayCurrent(int32_t val)
   {
     char buf[8];
-    io::utoa16((uint16_t)val, (uint8_t*)buf);
-    Disp::Puts2X(buf, Mcudrv::Resources::font10x16);
-    Disp::Puts2X("mA");
+    io::InsertDot(uint16_t(val / 10), 2, (uint8_t*)buf);
+    Disp::Putch2X(' ', Mcudrv::Resources::font10x16);
+    Disp::Putch2X(buf[0], Mcudrv::Resources::font10x16);
+    Disp::Putch2X('.');
+    Disp::Puts2X(&buf[2], Mcudrv::Resources::font10x16);
+    Disp::Putch2X('A');
   }
   void DisplayBrightness(int32_t val)
   {
