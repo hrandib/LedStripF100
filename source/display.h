@@ -33,6 +33,10 @@ class Display : public Rtos::BaseStaticThread<256>
 private:
   using Twi = Twis::SoftTwi<Mcudrv::Pb6, Mcudrv::Pb7>;
   using Disp = Mcudrv::ssd1306<Twi, Mcudrv::ssd1306_128x32>;
+  enum class State {
+    DispCurrent,
+    DispBrightness
+  };
 
   void DisplayCurrent(int32_t val)
   {
@@ -70,14 +74,23 @@ public:
   void main() final
   {
     int32_t value;
+    State prevState{};
     while(true) {
       msg_t result = dispMsgQueue.fetch(&value, S2ST(20));
       Disp::SetXY(0, 0);
       if(result == MSG_OK) {
         if(value < 0) {
+          if(prevState != State::DispCurrent) {
+            Disp::Fill();
+            prevState = State::DispCurrent;
+          }
           DisplayCurrent(-value);
         }
         else {
+          if(prevState != State::DispBrightness) {
+            Disp::Fill();
+            prevState = State::DispBrightness;
+          }
           DisplayBrightness(value);
         }
       }
