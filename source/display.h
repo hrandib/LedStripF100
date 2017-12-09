@@ -66,6 +66,7 @@ public:
   void Init()
   {
     Twi::Init();
+    sleep(MS2ST(100));
     Disp::Init();
     Disp::Fill();
     Disp::SetContrast(10);
@@ -92,6 +93,7 @@ public:
             prevState = State::DispBrightness;
           }
           DisplayBrightness(value);
+          sleep(MS2ST(500));
         }
       }
       else {
