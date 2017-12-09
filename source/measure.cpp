@@ -36,3 +36,4 @@ const ADCConversionGroup Measure::adcGroupCfg = {
 
 adcsample_t Measure::samples[channelsNum * bufDepth];
 virtual_timer_t Measure::convertVt;
+
