@@ -224,7 +224,7 @@ namespace Mcudrv {
         SetX(x_ - (charWidth + charSpacing));
         break;
       case ' ':
-        Fill(x_, charWidth, y_, charHeightInBytes);
+        Fill(x_, charWidth + charSpacing, y_, charHeightInBytes);
         break;
        default:
         //not processed
@@ -296,19 +296,6 @@ namespace Mcudrv {
       while(*str) {
         Putch2X(*str++, font);
       }
-    }
-
-    template<typename T>
-    static void Puts(T value, uint8_t base = 10)
-    {
-      uint8_t buf[16];
-      Puts(io::xtoa(value, buf, base));
-    }
-    template<typename T>
-    static void Puts2X(T value, uint8_t base = 10)
-    {
-      uint8_t buf[16];
-      Puts2X(io::xtoa(value, buf, base));
     }
   };
   template<typename Twi, typename Type>

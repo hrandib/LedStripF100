@@ -37,23 +37,29 @@ private:
   static constexpr size_t samplingTime = S2ST(1);
   static constexpr size_t channelsNum = 1;
   static constexpr size_t bufDepth = 16;
+  static constexpr systime_t maxDisplayTime = S2ST(8 * 60 * 60);
+  static constexpr int32_t currentOffset = 45;
   static adcsample_t samples[channelsNum * bufDepth];
   static const ADCConversionGroup adcGroupCfg;
   static virtual_timer_t convertVt;
 
   static int32_t ConvertTomA(int32_t value)
   {
-    return ((value * 4) / 90) + 40;
+    return ((value * 4) / 90) + currentOffset;
   }
   static void AdcCb(ADCDriver* /*adcp*/, adcsample_t* buffer, size_t n) {
+    static systime_t displayTimeEnd;
     int32_t result{};
     while(n) {
       result += buffer[--n];
     }
     result = ConvertTomA(result);
-    if(result > 41) {
+    if(result > (currentOffset + 1) && Rtos::System::getTimeX() < displayTimeEnd) {
       Rtos::SysLockGuardFromISR lock;
       dispMsgQueue.postI(-result);
+    }
+    else {
+      displayTimeEnd = Rtos::System::getTimeX() + maxDisplayTime;
     }
   }
   static void TimerCb(void*)
