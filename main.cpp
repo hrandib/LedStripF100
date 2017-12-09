@@ -40,7 +40,7 @@ using LedDriver = Wk::LedDriver<>;
 
 using ButtonControl = Wk::ButtonControl<LedDriver>;
 
-static Wk::Wake<LedDriver> wake(UARTD1, 115200, GPIOA, 10);
+static Wk::Wake<LedDriver> wake(UARTD1, 9600, GPIOA, 10);
 
 static Display disp;
 static Measure meas;

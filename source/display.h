@@ -77,7 +77,7 @@ public:
     int32_t value;
     State prevState{};
     while(true) {
-      msg_t result = dispMsgQueue.fetch(&value, S2ST(20));
+      msg_t result = dispMsgQueue.fetch(&value, S2ST(10));
       Disp::SetXY(0, 0);
       if(result == MSG_OK) {
         if(value < 0) {

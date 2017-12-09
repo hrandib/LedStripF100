@@ -40,7 +40,7 @@ namespace Wk {
     FESC = 0xDB,    //Frame ESCape
     TFEND = 0xDC,    //Transposed Frame END
     TFESC = 0xDD,    //Transposed Frame ESCape
-    DEFAULT_ADDRESS = 7
+    DEFAULT_ADDRESS = 15
   };
 
   enum State {
