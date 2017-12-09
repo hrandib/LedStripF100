@@ -37,7 +37,7 @@ CppApplication
     //"-nostdlib", "-nodefaultlibs"
 	]
   cpp.commonCompilerFlags: [
-//    "-flto=8",
+    "-flto=8",
     "-fdata-sections",
     "-ffunction-sections",
 //		"-Wno-unused-function",

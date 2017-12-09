@@ -37,7 +37,7 @@ private:
   static constexpr size_t samplingTime = S2ST(1);
   static constexpr size_t channelsNum = 1;
   static constexpr size_t bufDepth = 16;
-  static constexpr size_t maxDisplayTime = S2ST(8 * 60 * 60);
+  static constexpr systime_t maxDisplayTime = S2ST(8 * 60 * 60);
   static constexpr int32_t currentOffset = 45;
   static adcsample_t samples[channelsNum * bufDepth];
   static const ADCConversionGroup adcGroupCfg;
