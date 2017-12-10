@@ -24,36 +24,37 @@
 
 namespace Wk {
 
-const PWMConfig LedDriverFeatures::pwmcfg {
-  4000000UL,                                    /* 4MHz PWM clock frequency.   */
-  4096,                                         /* Initial PWM period 1ms.      */
-  nullptr,
-  {
-    {PWM_OUTPUT_DISABLED, nullptr},
-    {PWM_OUTPUT_DISABLED, nullptr},
-    {PWM_OUTPUT_ACTIVE_HIGH, nullptr},
-    {PWM_OUTPUT_DISABLED, nullptr}
-  },
-  0,
-  0,
-  #if STM32_PWM_USE_ADVANCED
-  0
-  #endif
-};
+  const PWMConfig LedDriverFeatures::pwmcfg {
+    4000000UL,                                    /* 4MHz PWM clock frequency.   */
+    4096,                                         /* Initial PWM period 1ms.      */
+    nullptr,
+    {
+      {PWM_OUTPUT_DISABLED, nullptr},
+      {PWM_OUTPUT_DISABLED, nullptr},
+      {PWM_OUTPUT_ACTIVE_HIGH, nullptr},
+      {PWM_OUTPUT_DISABLED, nullptr}
+    },
+    0,
+    0,
+#if STM32_PWM_USE_ADVANCED
+    0
+#endif
+  };
 
-PWMDriver* const LedDriverFeatures::PWMD{ &PWMD3 };
+  PWMDriver* const LedDriverFeatures::PWMD{ &PWMD3 };
 
-const uint16_t LedDriverFeatures::LUT[] = {
-  0,7,8,9,10,11,13,15,17,19,21,24,27,30,33,36,
-  40,44,48,52,56,61,66,71,76,81,86,92,98,104,110,
-  116,123,130,137,144,151,159,167,175,183,191,200,
-  209,218,227,236,246,256,266,276,286,296,306,316,
-  326,337,348,359,370,381,393,405,417,429,441,454,
-  467,480,493,506,520,534,548,562,577,592,607,622,
-  637,653,669,685,701,717,734,751,768,785,802,819,
-  836,853,870,887,983,1110,1240,1400,1571,1750 };
+  const uint16_t LedDriverFeatures::LUT[] = {
+    0, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 31, 35, 40, 46,
+    53, 61, 70, 80, 91, 103, 116, 130, 145, 161, 178, 196, 215, 235, 256,
+    278, 301, 325, 350, 376, 403, 431, 460, 490, 521, 553, 586, 620, 655,
+    691, 728, 766, 805, 845, 886, 928, 971, 1015, 1060, 1106, 1153, 1201,
+    1250, 1300, 1351, 1403, 1456, 1510, 1565, 1621, 1678, 1736, 1795, 1855,
+    1916, 1978, 2041, 2105, 2170, 2236, 2303, 2371, 2440, 2510, 2581, 2653,
+    2726, 2800, 2875, 2951, 3028, 3106, 3185, 3265, 3346, 3428, 3511, 3595,
+    3680, 3766, 3853, 3941, 4096
+  };
 
-const ioportid_t LedDriverFeatures::pwmPort{ GPIOB };
-const uint16_t LedDriverFeatures::pwmPad{ 0 };
+  const ioportid_t LedDriverFeatures::pwmPort{ GPIOB };
+  const uint16_t LedDriverFeatures::pwmPad{ 0 };
 
 } //Wk
