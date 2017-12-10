@@ -9,7 +9,7 @@ template<typename LedDriver>
 class ButtonControl {
 private:
   enum {
-    BLIND_TIMESLOT = 2,
+    BLIND_TIMESLOT = 1,
     SHORTPRESS_TIMESLOT = 15,
     UPDATE_PERIOD_MS = 40
   };

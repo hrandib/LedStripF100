@@ -92,7 +92,6 @@ public:
             prevState = State::DispBrightness;
           }
           DisplayBrightness(value);
-          sleep(MS2ST(500));
         }
       }
       else {
