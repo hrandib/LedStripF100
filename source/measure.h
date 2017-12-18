@@ -30,7 +30,6 @@
 
 extern Rtos::Mailbox<int32_t, 4> dispMsgQueue;
 
-//only one instance is allowed
 class Measure
 {
 private:

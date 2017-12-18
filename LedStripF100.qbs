@@ -15,19 +15,13 @@ CppApplication
   cpp.enableRtti: false
   cpp.positionIndependentCode: false
 	cpp.cLanguageVersion: "c11"
-  cpp.cxxLanguageVersion: "gnu++1z"
+  cpp.cxxLanguageVersion: "gnu++17"
 	cpp.executableSuffix: ".elf"
   cpp.defines: [
 		"_GLIBCXX_USE_C99",
     "_GLIBCXX_HAVE_BROKEN_VSWPRINTF",
     "SHELL_CONFIG_FILE",
-    "STM32F100xB",
-
-    //TODO: Remove editor helpers
-    "TRUE=1",
-    "FALSE=0",
-    "HAL_USE_UART",
-    "HAL_USE_ADC",
+    "STM32F100xB"
 	]
   cpp.driverFlags: [
 		"-mcpu=cortex-m3",
@@ -40,9 +34,14 @@ CppApplication
     "-flto=8",
     "-fdata-sections",
     "-ffunction-sections",
+    "-Wno-implicit-fallthrough"
 //		"-Wno-unused-function",
 //		"-Wno-maybe-uninitialized"
 	]
+  cpp.cxxFlags: [
+    "-Wno-register"
+  ]
+
 	Group {	name: "Linker files"
     prefix: "ld/"
 		fileTags: ["linkerscript"]
@@ -187,14 +186,9 @@ CppApplication
   }
   Group { name: "Drivers ChibiOS"
     prefix: ChibiOS + "os/hal/ports/STM32/"
-//TODO: Remove unnecessary
     files: [
-      "LLD/DACv1/hal_dac_lld.h",
-      "LLD/DACv1/hal_dac_lld.c",
       "LLD/DMAv1/stm32_dma.h",
       "LLD/DMAv1/stm32_dma.c",
-      "LLD/EXTIv1/hal_ext_lld.h",
-      "LLD/EXTIv1/hal_ext_lld.c",
       "LLD/GPIOv1/hal_pal_lld.h",
       "LLD/GPIOv1/hal_pal_lld.c",
       "LLD/TIMv1/stm32_tim.h",
@@ -204,8 +198,6 @@ CppApplication
       "LLD/TIMv1/hal_st_lld.c",
       "LLD/USARTv1/hal_uart_lld.h",
       "LLD/USARTv1/hal_uart_lld.c",
-      "LLD/USARTv1/hal_serial_lld.h",
-      "LLD/USARTv1/hal_serial_lld.c"
     ]
   }
   Group { name: "RT"
@@ -302,6 +294,14 @@ CppApplication
     files: [
       "fonts.h",
       "fonts.cpp",
+    ]
+  }
+  Group { name: "CMSIS"
+    prefix: ChibiOS + "os/common/ext/CMSIS/"
+    files: [
+      "include/core_cm3.h",
+      "include/core_cmInstr.h",
+      "include/cmsis_gcc.h"
     ]
   }
   Group { name: "Test"

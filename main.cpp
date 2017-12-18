@@ -44,18 +44,9 @@ static Wk::Wake<LedDriver> wake(UARTD1, 9600, GPIOA, 10);
 
 static Display disp;
 static Measure meas;
-/*
- * Application entry point.
- */
+
 int main(void) {
 
-  /*
-   * System initializations.
-   * - HAL initialization, this also initializes the configured device drivers
-   *   and performs the board-specific initializations.
-   * - Kernel initialization, the main() function becomes a thread and the
-   *   RTOS is active.
-   */
   halInit();
   System::init();
   using namespace Mcudrv;
