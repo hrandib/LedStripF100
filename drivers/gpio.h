@@ -65,30 +65,54 @@ namespace Mcudrv {
       uint32_t crh;
     };
     static constexpr size_t Width = 16;
-
+  protected:
     template<typename... Args>
-    static constexpr uint32_t WriteConfigHelperL(DataT mask, Cfg config, Args... args)
+    static constexpr uint32_t UnpackConfigL(DataT mask, Cfg config, Args... args)
     {
-      return (Utils::Unpack4Bit(mask) * (config >> 1)) | WriteConfigHelperL(args...);
+      return (Utils::Unpack4Bit(mask) * (config >> 1)) | UnpackConfigL(args...);
     }
-    static constexpr uint32_t WriteConfigHelperL()
+    static constexpr uint32_t UnpackConfigL()
     {
       return 0;
     }
     template<typename... Args>
-    static constexpr uint32_t WriteConfigHelperH(DataT mask, Cfg config, Args... args)
+    static constexpr uint32_t UnpackConfigH(DataT mask, Cfg config, Args... args)
     {
-      return (Utils::Unpack4Bit(mask >> 8) * (config >> 1)) | WriteConfigHelperH(args...);;
+      return (Utils::Unpack4Bit(mask >> 8) * (config >> 1)) | UnpackConfigH(args...);;
     }
-    static constexpr uint32_t WriteConfigHelperH()
+    static constexpr uint32_t UnpackConfigH()
     {
       return 0;
     }
-
+    template<DataT mask, Cfg, auto... Rest>
+    static constexpr uint32_t GetMask()
+    {
+      if constexpr(sizeof...(Rest) >= 2) {
+        return mask | GetMask<Rest...>();
+      }
+      else return 0;
+    }
+    template<DataT mask, Cfg config, auto... Rest>
+    static constexpr uint32_t UnpackConfigL()
+    {
+      if constexpr(sizeof...(Rest) >= 2) {
+        return (Utils::Unpack4Bit(mask) * (config >> 1)) | UnpackConfigL<Rest...>();
+      }
+      else return 0;
+    }
+    template<DataT mask, Cfg config, auto... Rest>
+    static constexpr uint32_t UnpackConfigH()
+    {
+      if constexpr(sizeof...(Rest) >= 2) {
+        return (Utils::Unpack4Bit(mask >> 8) * (config >> 1)) | UnpackConfigH<Rest...>();
+      }
+      else return 0;
+    }
+  public:
     template<typename... Args>
     static constexpr CR EvalCR(DataT mask, Cfg config, Args... args)
     {
-      return { WriteConfigHelperL(mask, config, args...), WriteConfigHelperH(mask, config, args...)};
+      return { UnpackConfigL(mask, config, args...), UnpackConfigH(mask, config, args...)};
     }
   };
 
@@ -105,7 +129,6 @@ namespace Mcudrv {
       {
         return reinterpret_cast<GPIO_TypeDef*>(baseAddr);
       }
-
     public:
       static void Enable()
       {
@@ -114,23 +137,23 @@ namespace Mcudrv {
 
       //constant interface
 
-      template <DataT mask, Cfg config>
+      template<DataT mask, Cfg config, auto... Rest>
       static void SetConfig()
       {
-        if(mask & 0xFF) {
-          constexpr uint32_t maskL = Unpack4Bit(mask);
-          Regs()->CRL = (Regs()->CRL & ~(maskL * 0x0F)) | maskL * (config >> 1);
+        if constexpr(GetMask<mask, config, Rest...>() & 0xFF) {
+          constexpr uint32_t maskAll = Unpack4Bit(GetMask<mask, config, Rest...>());
+          Regs()->CRL = (Regs()->CRL & ~(maskAll * 0x0F)) | UnpackConfigL<mask, config, Rest...>();
         }
-        if(mask >> 8) {
-          constexpr uint32_t maskH = Unpack4Bit(mask >> 8);
-          Regs()->CRH = (Regs()->CRH & ~(maskH * 0x0F)) | maskH * (config >> 1);
+        if constexpr(GetMask<mask, config, Rest...>() >> 8) {
+          constexpr uint32_t maskAll = Unpack4Bit(GetMask<mask, config, Rest...>() >> 8);
+          Regs()->CRH = (Regs()->CRH & ~(maskAll * 0x0F)) | UnpackConfigH<mask, config, Rest...>();
         }
       }
-      template <DataT mask, Cfg config>
+      template <DataT mask, Cfg config, auto... Rest>
       static void WriteConfig()
       {
-        Regs()->CRL = Unpack4Bit(mask) * (config >> 1);
-        Regs()->CRH = Unpack4Bit(mask >> 8) * (config >> 1);
+        Regs()->CRL = UnpackConfigL<mask, config, Rest...>();
+        Regs()->CRH = UnpackConfigH<mask, config, Rest...>();
       }
       template <DataT mask>
       static void Set()

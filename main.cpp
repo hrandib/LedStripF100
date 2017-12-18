@@ -45,12 +45,16 @@ static Wk::Wake<LedDriver> wake(UARTD1, 9600, GPIOA, 10);
 static Display disp;
 static Measure meas;
 
+using namespace Mcudrv;
+
 int main(void) {
 
   halInit();
   System::init();
   using namespace Mcudrv;
   GpioB::Enable();
+//  GpioA::WriteConfig<P0 | P1, GpioBase::In_Pullup, P3 | P4, GpioBase::Out_PushPull,
+//                      P8 | P9, GpioBase::In_Pullup, P10 | P11, GpioBase::Out_PushPull>();
   wake.Init();
   disp.Init();
   meas.Init();
